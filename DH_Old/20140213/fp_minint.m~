@@ -1,0 +1,41 @@
+%% Reconstruct Minimum Intensity.
+% Loads an image that can be read into the Fresnel Propagator.
+% Version 3.0
+
+function [Imin, zmap] = fp_minint(E0, zmin, zmax, numz, lambda, ps, zpad)
+
+if nargin<7
+    zpad = size(E0,1);
+end
+
+%z positions to reconstruct
+z = linspace(zmin, zmax, numz);
+
+wb = waitbar(1/numz,'Reconstructing min intensity...');
+
+%initialize Imin at the first z-step (field magnitude)
+Imin = abs(fp_fresnelprop(E0,z(1), lambda, ps, zpad));
+zmap = ones(size(E0))*z(1);
+
+
+%reconstruct the rest of the volume, tracking the intensity 
+for i=2:numz
+    waitbar(i/numz,wb);
+    
+   %reconstruct at the next z-plane
+    E1 = abs(fp_fresnelprop(E0, z(i), lambda, ps, zpad));
+    
+    %compare, looking for minimum values
+    minpix = E1<Imin;
+    
+    %update the memories
+    Imin(minpix) = E1(minpix);
+    zmap(minpix) = z(i);
+        [E1,H]=fp_fresnelprop(E0,z,632.8e-9,eps);
+    %imagesc(abs(E1(512:1023,1024:1535).^2),[0 255]);title(strcat('Z= +',num2str(z)),'FontSize',16);
+    imagesc(abs(E1(1:end,1:end)),[(min(E0(:))-1) (1+max(E0(:)))]);title(strcat('Z= +',num2str(z)),'FontSize',16);
+    drawnow
+    
+end
+
+close(wb);

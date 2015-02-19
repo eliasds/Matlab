@@ -1,0 +1,5 @@
+%List all files needed to run wisker detection
+
+fp_avg_bgfiles.m
+%fp_imin_gpu.m
+wd_iminsave_gpu.m

@@ -1,0 +1,20 @@
+% [m,n]=size(E0);
+% center=round(size(E0)/2);
+% radix2=2^(nextpow2(min(m,n))-2); %(1024)
+% 
+% %Center,Center
+% E0=E0((center(1)+1-radix2/2):(center(1)+radix2/2),(center(2)+1-radix2/2):(center(2)+radix2/2));
+
+E0_1=E0;
+E0_div=E0_1./bg;
+E0_sub=E0_1-bg;
+
+bg_c=bg(1500-1023:1500,1800-1023:1800);
+E0_1_c=E0_1(1500-1023:1500,1800-1023:1800);
+E0_div_c=E0_div(1500-1023:1500,1800-1023:1800);
+E0_sub_c=E0_sub(1500-1023:1500,1800-1023:1800);
+
+figure(11);colormap(gray);imagesc(bg_c);
+figure(12);colormap(gray);imagesc(E0_1_c);
+figure(13);colormap(gray);imagesc(E0_div_c);
+figure(14);colormap(gray);imagesc(E0_sub_c);

@@ -1,0 +1,16 @@
+%% Plot 3D Particle information
+% Version 1.0
+
+fignum=20;
+figure(fignum)
+
+for m=1:10
+    wd_3dplot(whiskers)
+    title(['Time:',num2str(m)]);
+    grid on
+    box on
+    %hold on
+    %pause(0.1)
+    %hold off
+end
+%hold off

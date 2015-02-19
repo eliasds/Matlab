@@ -1,0 +1,11 @@
+function [X,Y] = fp_partdetect(Imin, threshlev, ero);
+th = Imin<threshlev;
+th = imerode(th,ones(ero)); %looks in neighborhood of ero area
+th = bwlabel(th);
+autodetstruct = regionprops(th,'centroid');
+xy = [autodetstruct.Centroid];
+X = xy(1:2:end);
+Y = xy(2:2:end);
+
+figure(101)
+
