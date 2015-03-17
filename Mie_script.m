@@ -30,10 +30,11 @@ n2 = 1.5821; %polystyrene
 n3 = 1.46; %cellulose
 
 %% Coded Aperture Mask
-mask=ones(2*N,2*N);
-mask(1:end,1:N)=0;
+mask=ones(N,N);
+mask(1:end,1:N/2-1)=0;
 % mask=flipud(mask);
-mask=fliplr(mask);
+% mask=fliplr(mask);
+maskpadded = imresize(mask,'scale',2,'method','nearest');
 
 lambda = 0.6328E-6; % in meters
 k = 2*pi/lambda*n1;
@@ -45,6 +46,7 @@ k = 2*pi/lambda*n1;
 % delta_x = lambda/NA % lateral resolution
 % DOF = lambda/NA^2 % depth of focus
 
+%%
 % particle z locations randomly between zmin and zmax (in meters)
 zmin = -2E-3;
 zmax = 2E-3;
@@ -93,7 +95,7 @@ Holo = 1+2*real(Etot)+abs(Etot).^2;
 Field = Etot;
 
 % set(0,'DefaultFigureWindowStyle','docked') %Dock all figures
-figure; imagesc(Holo,[0 max(Holo(:))]); axis image; colormap gray; colorbar;
+figure; imagesc(Holo,[0 max(Holo(:))]); axis image; colormap gray; colorbar; axis ij;
 
 fn = ['Mie',num2str(N),'px_',num2str(Np),'part_',num2str(round(n1*100)),'n1_',num2str(round(n2*100)),'n2'];
 save(fn, 'Holo', 'Field', 'z_obj', 'x', 'y', 'd', 'dpix', 'lambda', 'n1', 'n2', 'n3', 'zmin', 'zmax', 'mag', 'ps');
