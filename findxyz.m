@@ -10,23 +10,25 @@ function [ xyzlocations ] = findxyz( mat, Holo )
 
 if isvector(mat) || isscalar(mat)
     idxlist = mat;
-    matsize = Holo;
+    matsize = size(Holo);
+    matdims = ndims(Holo);
 else
     idxlist = find(mat);
     matsize = size(mat);
+    matdims = ndims(mat);
 end
+numpart = length(idxlist);
 
-xyzlocations(sum(mat(:)),3) = 0; % makes colums for x,y,z coordinates
-for L = 1:length(idxlist)
-    if ndims(mat) > 2
+xyzlocations(numpart,3) = 0; % makes colums for x,y,z coordinates
+for L = 1:numpart
+    if matdimsidx > 2
         xyzlocations(L,3) = ceil(idxlist(L)/(matsize(1)*matsize(2)));
     end
     xyzlocations(L,2) = rem(rem(idxlist(L),(matsize(1)*matsize(2))),matsize(1));
     xyzlocations(L,1) = ceil(rem(idxlist(L),(matsize(1)*matsize(2)))/matsize(1));
 end
 if exist('Holo','var') 
-    matdims = ndim(Holo);
-    for L = 1:length(xyzlocations)
+    for L = 1:numpart
         xyzlocations(L,matdims+1) = Holo(xyzlocations(L,2),xyzlocations(L,1),xyzlocations(L,3));
     end
 end
