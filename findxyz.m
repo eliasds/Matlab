@@ -21,7 +21,7 @@ numpart = length(idxlist);
 
 xyzlocations(numpart,3) = 0; % makes colums for x,y,z coordinates
 for L = 1:numpart
-    if matdimsidx > 2
+    if matdims > 2
         xyzlocations(L,3) = ceil(idxlist(L)/(matsize(1)*matsize(2)));
     end
     xyzlocations(L,2) = rem(rem(idxlist(L),(matsize(1)*matsize(2))),matsize(1));
