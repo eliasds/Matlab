@@ -4,6 +4,7 @@ function [ matcrop, rect ] = xycrop( mat, rect )
 
 % matsize = size(mat);
 matdims = ndims(mat);
+rect(3:4) = rect(3:4)-1;
 
 if matdims == 3
     matcrop = mat((rect(2):rect(2)+rect(4)),(rect(1):rect(1)+rect(3)),:);

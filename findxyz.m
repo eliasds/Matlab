@@ -5,10 +5,7 @@ function [ xyzlocations ] = findxyz( mat, varargin )
 %   will an extra column with the value of Holo at coodinate (x,y,...) 
 %   
 
-% mat = round(10*rand(3,4,5));
-% mat = mat < 2;
-
-rect = [];
+xycrop = false;
 
 while ~isempty(varargin)
     switch upper(varargin{1})
@@ -19,9 +16,8 @@ while ~isempty(varargin)
             
         case 'XYCROP'
             rect = [(varargin{2})];
+            xycrop = true;
 %             rect = [1550-512,2070-1024,1023,1023];
-            mat = mat((rect(2):rect(2)+rect(4)),(rect(1):rect(1)+rect(3)),:);
-%             Holo = Holo((rect(2):rect(2)+rect(4)),(rect(1):rect(1)+rect(3)),:);
             varargin(1:2) = [];
             
         otherwise
@@ -40,6 +36,10 @@ else
 end
 numpart = length(idxlist);
 
+if xycrop == false
+    rect = [1,1,matsize(2),matsize(1)];
+end
+
 xyzlocations(numpart,3) = 0; % makes colums for x,y,z coordinates
 for L = 1:numpart
     if matdims > 2
@@ -48,11 +48,15 @@ for L = 1:numpart
     xyzlocations(L,2) = rem(rem(idxlist(L),(matsize(1)*matsize(2))),matsize(1));
     xyzlocations(L,1) = ceil(rem(idxlist(L),(matsize(1)*matsize(2)))/matsize(1));
 end
+
 if exist('Holo','var') 
     for L = 1:numpart
         xyzlocations(L,matdims+1) = Holo(xyzlocations(L,2),xyzlocations(L,1),xyzlocations(L,3));
     end
 end
+
+xyzlocations(:,2) = xyzlocations(:,2) + rect(2) - 1;
+xyzlocations(:,1) = xyzlocations(:,1) + rect(1) - 1;
 
 end
 
