@@ -1,206 +1,253 @@
-function [h] = scalebar(varargin) 
-% SCALEBAR places a graphical reference scale on a map. This function was
-% designed as a simpler alternative to the scaleruler function. 
-% 
-% This function requires Matlab's Mapping Toolbox. 
-% 
-%% Syntax 
-% 
-% scalebar
-% scalebar('Length',LengthInKilometers)
-% scalebar('Location','LocationOnMap')
-% scalebar('Orientation','VerticalOrHorizontal')
-% scalebar('TextProperty',TextValue)
-% scalebar('LineProperty',LineValue)
-% h = scalebar(...)
-% 
-% 
-%% Description 
-% 
-% scalebar places a 100 km graphical reference scale at the lower left-hand
-% corner of a map. 
-% 
-% scalebar('Length',LengthInKilometers) specifies the length of the scalebar. 
-% Default length is 100 km. Talk about a scalar value, am I right? 
+function h = scalebar(varargin)
+%SCALEBAR creates a scalebar on an axes
 %
-% scalebar('Location','LocationOnMap') specifies location of the scalebar
-% on the map. Location can be 
-%           'southwest' (lower left) {default} 
-%           'northwest' (upper left) 
-%           'northeast' (upper right)
-%           'southeast' (lower right) 
+% SCALEBAR
+% SCALEBAR OFF
+% SCALEBAR(PARAMETER, VALUE, ...)
+% SCALEBAR(HAXES, PARAMETER, VALUE, ...)
+% H = SCALEBAR(...)
+% 
+% Draws a scalebar on the axes and returns handle to the scalebar. The
+% DataAspectRatio property of the axes must be set to [1 1 1] and the view
+% must be in 2D. All parameters are optional (note the default values
+% below). SCALEBAR OFF deletes the current scalebar.
+% 
+% PARAMETER/VALUE pairs
+%     hAxes:        handle to the axes (defaults to current axes)
+%     ScaleLength:  length to show (in data units) (defaults to ~10% of the 
+%                       x-axis limit range)
+%     ScaleLengthRatio: ScaleLength/range(XLim)
+%     Location:     location of the scalebar. Possible values are
+%                       northeast (default)
+%                       northwest
+%                       southeast
+%                       southwest
+%                       [x y] data coordinates
+%     Colour:       colour of scalebar in 1x3 RGB array (default is [0 0 0])
+%     Bold:         draw with bold text and linewidth=2. 
+%                       True or false(default)
+%     Unit:         string containing units e.g. 'mm'
 %
-% scalebar('Orientation','VerticalOrHorizontal') specifies a 'vertical' or
-% 'horizontal' scalebar. Default value is 'horizontal'. 
+% Note: SCALEBAR sets the XLimMode and YLimMode of the axes to manual.
 %
-% scalebar('TextProperty',TextValue) specifies properties of text. 
-%
-% scalebar('LineProperty',LineValue) specifies properties of the reference
-% scale line. 
-%
-% h = scalebar(...) returns a handle for the scalebar. 
-%
-% 
-%% Examples 
-% 
-% EXAMPLE 1: 
-% figure; usamap('texas')
-% states = shaperead('usastatelo.shp','UseGeoCoords',true);
-% geoshow(states, 'DisplayType', 'polygon')
-% scalebar('length',200,'color','b')
-% 
-% EXAMPLE 2: (Requires Antarctic Mapping Tools)
-% load coast
-% antmap
-% patchm(lat,long,[.588 .976 .482])
-% scalebar('length',1000)
-% 
-% EXAMPLE 3: (Requires Bedmap2 Toolbox)
-% bedmap2 'patchgl'
-% bedmap2('patchshelves','oceancolor',[0.0118 0.4431 0.6118])
-% bedmap2_zoom 'Mertz Glacier Tongue'
-% scarlabel('Mertz Glacier Tongue','fontangle','italic')
-% scalebar
-%
-% 
-%% Author Info.  
-% 
-% This function was created by Chad A. Greene of the University of Texas 
-% Institute for Geophysics in 2013. This function was originally designed
-% for the Bedmap2 Toolbox for Matlab, but has been slightly updated for 
-% inclusion in the Antarctic Mapping Tools package.  Although this function 
-% was designed for Antarctic maps, it should work for other maps as well.
-% 
-% See also scaleruler. 
+% Created 10 November 2009 by Amanda Ng
+% Modified 24 March 2013 by Amanda Ng
+%  - fixed bug: bold wasn't refreshing after zoom
+%  - added unit string
 
+    % DELETE SCALEBAR IF ONE EXISTS
+    delete(findobj(gca,'tag','scalebar'));
 
-%% Set defaults:
-
-lngth = 100; % default scalebar length in kilometers
-location = 'southwest'; % default location
-orientation = 'horizontal'; % default orientation
-
-%% Parse inputs: 
-
-% Check for user-declared location: 
-tmp = strncmpi(varargin,'loc',3); 
-if any(tmp)
-    location = varargin{find(tmp)+1}; 
-    tmp(find(tmp)+1)=1; 
-    varargin = varargin(~tmp); 
-    assert(isnumeric(location)==0,'scalebar location must be a string.')
-end
-
-% Check for user-declared length (also accept "width" or "scale")
-tmp = strncmpi(varargin,'len',3)|strncmpi(varargin,'wid',3)|strcmpi(varargin,'scale'); 
-if any(tmp)
-    lngth = varargin{find(tmp)+1}; 
-    tmp(find(tmp)+1)=1; 
-    varargin = varargin(~tmp); 
-    assert(isscalar(lngth)==1,'Scalebar Length must be a scalar value in kilometers.')
-end
-
- 
-% Check for user-declared orientation: 
-tmp = strncmpi(varargin,'orient',6); 
-if any(tmp)
-    orientation = varargin{find(tmp)+1}; 
-    tmp(find(tmp)+1)=1; 
-    varargin = varargin(~tmp); 
-    assert(isnumeric(orientation)==0,'Scalebar orientation can only be vertical or horizontal.')
-end
-
-%% Get size scale: 
-        
-[lat1,lon1]=minvtran(0,0);
-[lat2,lon2]=minvtran(.1,0);
-kmpermapunit = 10*distance(lat1,lon1,lat2,lon2,6378.137);
-
-xlim = get(gca,'xlim');
-ylim = get(gca,'ylim'); 
-
-switch lower(orientation)
-    case 'horizontal'
-    switch lower(location)
-        case {'southwest','sw'}
-            x1 = .05*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1+lngth/kmpermapunit; 
-            y1 = .05*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1; 
-
-        case {'southeast','se'}
-            x1 = .95*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1-lngth/kmpermapunit; 
-            y1 = .05*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1; 
-
-        case {'northwest','nw'}
-            x1 = .05*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1+lngth/kmpermapunit; 
-            y1 = .95*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1;         
-
-        case {'northeast','ne'}
-            x1 = .95*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1-lngth/kmpermapunit; 
-            y1 = .95*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1;  
-            
-        otherwise
-            error('Invalid location string for scalebar.')
+    % RETURN IF 'OFF' WAS REQUESTED
+    if nargin>0 && strcmpi(varargin{1},'off')
+        return;
     end
+
+    % CONSTANTS
+    directions = {'northwest','northeast','southeast','southwest'};
     
-    case 'vertical'
-        switch lower(location)
-        case {'southwest','sw'}
-            x1 = .05*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1;
-            y1 = .05*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1 + lngth/kmpermapunit; 
+    % SET PARAMETERS TO DEFAULTS
+    hAxes = gca;
+    scalelength = 0;
+    scalelengthratio = 0.1;
+    location = 'northeast';
+    colour = [0 0 0];
+    boldflag = false;
+    linewidth = 0.5;
+    fontweight = 'normal';
+    unitstring = '';
 
-        case {'southeast','se'}
-            x1 = .95*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1; 
-            y1 = .05*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1 + lngth/kmpermapunit; 
-
-        case {'northwest','nw'}
-            x1 = .05*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1; 
-            y1 = .95*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1 - lngth/kmpermapunit;        
-
-        case {'northeast','ne'}
-            x1 = .95*(xlim(2)-xlim(1))+xlim(1); 
-            x2 = x1; 
-            y1 = .95*(ylim(2)-ylim(1))+ylim(1); 
-            y2 = y1 - lngth/kmpermapunit; 
-            
-        otherwise
-            error('Invalid location string for scalebar.')
+    % PROCESS ARGUMENTS
+    if nargin>0
+        args = {};
+        % Process if arguments given as "hAxes, ..."
+        if ishandle(varargin{1}) %hAxes
+            args{length(args)+1}='hAxes';
+            args{length(args)+1}=varargin{1};
+            varargin = varargin(2:end);
         end
-end
+        args=[args varargin];
+        % Process argument pairs
+        for n=1:2:length(args)
+            parameter = args{n};
+            if n == length(args)
+                error('Parameter ''%s'' is not followed by a value in argument list', parameter);
+            end
+            value = args{n+1};
+            switch lower(parameter)
+                case 'haxes'
+                    if ~ishandle(value)
+                        error 'HAXES is not a valid Axes handle'
+                    elseif ~strcmpi(get(value,'type'),'axes')
+                        error 'HAXES is not a valid Axes handle'
+                    elseif strcmpi(get(value,'tag'),'colorbar')
+                        error 'HAXES is a handle to a colorbar'
+                    else
+                        hAxes = value;
+                    end
+                case 'scalelength'
+                    if ~isnumeric(value)
+                        error 'SCALELENGTH must be a numeric value'
+                    end
+                    scalelength = value;
+                case 'scalelengthratio'
+                    if ~isnumeric(value)
+                        error 'SCALELENGTHRATIO must be a numeric value'
+                    end
+                    scalelengthratio = value;
+                case 'location'
+                    if ~(numel(value)==2 && isnumeric(value)) && ...
+                       isempty(strmatch(lower(value),directions,'exact'))
+                        error 'unrecognised value for LOCATION'
+                    end
+                    location = value;
+                case 'colour'
+                    if numel(value)~=3 || ~isnumeric(value)
+                        error 'COLOUR must be a 1x3 representation of an RGB colour'
+                    end
+                    colour = value;
+                case 'bold'
+                    if ischar(value) && strcmpi(value,'true') || ...
+                       (islogical(value) || isnumeric(value)) && value
+                            boldflag = true;
+                            linewidth=2;
+                            fontweight='bold';
+                    end
+                case 'unit'
+                    if ~ischar(value) || isempty(value)
+                        error('''Unit'' must be followed by a string')
+                    end
+                    unitstring = [' ' strtrim(value)];
+                otherwise
+                    error(['unrecognised parameter: ' parameter]);
+            end
+        end
+    end
 
-h(1)=line([x1 x2],[y1 y2],'color','k','linewidth',2);
-
-h(2) = text(mean([x1 x2]),mean([y1 y2]),[num2str(lngth),' km'],...
-    'horizontalalignment','center',...
-    'verticalalignment','bottom');
+    % CHECK IF DATAASPECTRATIO IS [1 1 1]
+    if ~all(get(hAxes,'DataAspectRatio')==1)
+        error 'The Axes property DataAspectRatio must be set to [1 1 1]'
+    end
     
-% This is brute-force, but it says let's try to set everything that can
-% be set, be them text properties or line properties:
-for k = 1:2:length(varargin)
-    try
-        set(h(1),varargin{k},varargin{k+1})
+    % CHECK IF VIEW IS IN 2D
+    [az el] = view(hAxes);
+    if el~=90
+        error 'The Axes must be in 2D view'
     end
-    try
-        set(h(2),varargin{k},varargin{k+1})
+    
+    %GET IMAGE AND AXES DATA
+    axeslims = [get(hAxes,'xlim')' get(hAxes,'ylim')'];
+    axesdir = [1 1];
+    if strcmpi(get(hAxes,'XDir'),'reverse')
+        axeslims(:,1) = flipud(axeslims(:,1));
+        axesdir(1) = -1;
     end
-end
+    if strcmpi(get(hAxes,'YDir'),'reverse')
+        axeslims(:,2) = flipud(axeslims(:,2));
+        axesdir(2) = -1;
+    end
 
-% Return the title handle only if it is desired: 
-if nargout==0
-    clear h; 
-end
+    % CALCULATE SCALELENGTH
+    if scalelength==0
+        sl = range(axeslims(:,1))*scalelengthratio;
+        slorder = 10^floor(log10(sl));
+        scalelength = round(sl/slorder)*slorder;    
+    else
+        scalelengthratio = scalelength/range(axeslims(:,1));
+    end
+    
+    %SET UP POSITIONING
+    if ischar(location)
+        switch location
+            case 'northeast'
+                anchor = [axeslims(2,1) - axesdir(1)*range(axeslims(:,1))*0.05, ...
+                          axeslims(2,2) - axesdir(2)*range(axeslims(:,2))*0.05];
+                direction = 'southwest';
+            case 'northwest'
+                anchor = [axeslims(1,1) + axesdir(1)*range(axeslims(:,1))*0.05, ...
+                          axeslims(2,2) - axesdir(2)*range(axeslims(:,2))*0.05];
+                direction = 'southeast';
+            case 'southwest'
+                anchor = [axeslims(1,1) + axesdir(1)*range(axeslims(:,1))*0.05, ...
+                          axeslims(1,2) + axesdir(2)*range(axeslims(:,2))*0.05];
+                direction = 'northeast';
+            case 'southeast'
+                anchor = [axeslims(2,1) - axesdir(1)*range(axeslims(:,1))*0.05, ...
+                          axeslims(1,2) + axesdir(2)*range(axeslims(:,2))*0.05];
+                direction = 'northwest';
+        end    
+    else
+        anchor = location;
+        if location
+            dirToCentre = min(axeslims)+range(axeslims)/2 - location.*axesdir;
+            direction = directions{ceil((-1*atan2(dirToCentre(2),dirToCentre(1))+pi)/(2*pi)*4)};
+        end
+    end
 
+    linepos = [anchor; anchor];
+    if ~isempty(strfind(direction,'east'))
+        linepos(2,1) = linepos(2,1)+axesdir(1)*scalelength;
+    else
+        linepos(1,1) = linepos(1,1)-axesdir(1)*scalelength;
+    end
+    
+    ends(:,:,1) = [linepos(1,:); linepos(1,:)];
+    ends(:,:,2) = [linepos(2,:); linepos(2,:)];
+    if ~isempty(strfind(direction,'north'))
+        ends(2,2,:) = ends(2,2,:)-axesdir(2)*0.1*scalelength;
+        textalignment = {'bottom', 'center'};
+    else
+        ends(2,2,:) = ends(2,2,:)+axesdir(2)*0.1*scalelength;
+        textalignment = {'top', 'center'};
+    end
+            
+    % DRAW SCALEBAR
+    set(gca,'xlimmode','manual','ylimmode','manual');
+    hg = hggroup('tag','scalebar');
+    line(linepos(:,1), linepos(:,2), 'color', colour, 'linewidth', linewidth, 'parent', hg);
+    line(ends(:,1,1), ends(:,2,1), 'color', colour, 'linewidth', linewidth, 'parent', hg);
+    line(ends(:,1,2), ends(:,2,2), 'color', colour, 'linewidth', linewidth, 'parent', hg);
+    text(linepos(1,1),linepos(1,2),0,'0','verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    text(linepos(2,1),linepos(2,2),0,[num2str(scalelength) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    
+    if nargout>0
+        h = hg;
+    end
+    
+    % SETUP DELETE CALLBACK
+    set(hg,'DeleteFcn',@deleteScaleBar)
+    
+    % SETUP LISTENER TO RESET SCALEBAR ON CHANGE OF AXES LIMITS
+    hL(1) = addlistener(hAxes,'YLim','PostSet',@(src,event) resetScaleBar(src,event,hg));
 
+    % SET USERDATA
+    udata = {'ScaleLengthRatio',scalelengthratio;...
+             'AnchorRatio',[(anchor(1)-min(axeslims(:,1)))/range(axeslims(:,1)) (anchor(2)-min(axeslims(:,2)))/range(axeslims(:,2))];...
+             'Colour',colour;...
+             'Listeners',hL;...
+             'Bold',boldflag};
+    set(hg,'UserData',udata);    
+    
+    % CALLBACK FUNCTIONS
+    function deleteScaleBar(src,event)
+        udata = get(src,'UserData');
+        delete(udata{strcmpi(udata(:,1),'Listeners'),2});
+
+    function resetScaleBar(src,event,SB)
+        udata = get(SB,'UserData');
+        hAxes = get(SB,'parent');
+        
+        delete(SB);        
+        
+        axeslims = [get(hAxes,'xlim')' get(hAxes,'ylim')'];
+        
+        scalelengthratio = udata{strcmpi(udata(:,1),'ScaleLengthRatio'),2};
+        anchorratio = udata{strcmpi(udata(:,1),'AnchorRatio'),2};
+        location = [anchorratio(1)*range(axeslims(:,1))+axeslims(1,1) anchorratio(2)*range(axeslims(:,2))+axeslims(1,2)];
+        colour = udata{strcmpi(udata(:,1),'Colour'),2};
+        boldflag = udata{strcmpi(udata(:,1),'Bold'),2};
+        
+        scalebar(hAxes,'ScaleLengthRatio',scalelengthratio,'Location',location,'Colour',colour, 'Bold', boldflag);
+
+        
+            
