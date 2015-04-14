@@ -1,0 +1,85 @@
+<data wavelength="5000nm" pixel_size="0.5um">
+<!--
+	This is the cal logo imaged under interferometry
+-->
+	<var name="theta_values">[(70:-1:0), zeros(1,8)]*1deg</var>
+	<var name="cal">
+		<setparam name="image" value="flipud(#image)">
+			<normalizebackground mode="range">
+				<resample power="1">
+					<pad size="512">
+						<image color="blue">cal.png</image>
+					</pad>
+				</resample>
+			</normalizebackground>
+		</setparam>
+	</var>
+	<var name="tower">
+		<setparam name="image" value="flipud(#image)">
+			<normalizebackground mode="range">
+				<resample power="0">
+					<pad size="1024" value="index(#image,1)">
+						<imagecrop crop="960">
+							<image color="gray">Sather_Tower.jpg</image>
+						</imagecrop>
+					</pad>
+				</resample>
+			</normalizebackground>
+		</setparam>
+	</var>
+	<object name="obj_field" amplitude="1 - @cal" phase="1pi*(1-@tower)" />
+	<object name="obj" type="aberration" NA="inf" field="@obj_field" defocus="50nm" />
+	
+	<var name="output">inline</var>
+	<if true="strcmp(@output,'real')">
+	    <measurementset>
+			<for theta="@theta_values">
+				<measurementset>
+					<object name="pw" size="size(@obj)" type="planewave" />
+					<image>abs(@obj + @pw-mean(reshape(@pw,1,[]))).^2</image>
+				</measurementset>
+			</for>
+	    </measurementset>
+    </if>
+    <if true="strcmp(@output,'fourier')">
+		<measurementset>
+			<setparam name="image" value="removeDC(abs(fftshift(fft2(#image))))">
+				<resample power="-2">
+					<for theta="@theta_values">
+						<measurementset>
+							<object name="pw" size="size(@obj)" type="planewave" />
+							<image>abs(@obj + @pw-mean(reshape(@pw,1,[]))).^2</image>
+						</measurementset>
+					</for>
+				</resample>
+			</setparam>
+		</measurementset>
+    </if>
+    <if true="strcmp(@output,'object')">
+		<measurementset>
+			<image suffix="abs">abs(@obj)</image>
+			<image suffix="angle">angle(@obj)</image>
+		</measurementset>
+    </if>
+    <if true="strcmp(@output,'model')">
+		<measurementset>
+			<var name="E">@obj + 1</var>
+			<image suffix="I">abs(@E).^2</image>
+			<image suffix="E2">abs(@obj).^2</image>
+			<image suffix="ReE">abs(@E).^2 - abs(@obj).^2 - 1</image>
+		</measurementset>
+    </if>
+	<if true="strcmp(@output,'inline')">
+	    <measurementset>
+			<for phase_shift="linspace(0,2*pi,100)">
+				<measurementset>
+					<image>abs(@obj + exp(1i*#phase_shift)).^2</image>
+				</measurementset>
+			</for>
+	    </measurementset>
+    </if>
+    
+	<setting name="fps">8</setting>
+	<setting name="colormap">gray</setting>
+    
+</data>

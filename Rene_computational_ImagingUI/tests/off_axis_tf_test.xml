@@ -1,0 +1,43 @@
+<data>
+    <setting name="pixel_size">@pixel_size=25nm</setting>
+    <setting name="size">256</setting>
+    <setting name="wavelength">13.5nm</setting>
+    
+    <setting name="rms">(@rms={10pm})/#wavelength*4pi</setting>
+    <object name="phase_roughness" type="speckle" rms="#rms" correlation_length="110nm" option="real" />
+    <object name="mask" phase="@phase_roughness" />
+    <setting name="mask">@mask</setting>
+    
+    <setting name="NA">0.32/4</setting>
+        
+	<measurementset illumination="@monopole" pupil="@pupil">
+        <object field="@mask">
+			<for ill_x="linspace(-1,1,17)">
+				<propagate defocus="10nm" />
+			</for>
+        </object>
+	</measurementset>
+	
+	<illumination name="monopole" sigma="0.1">
+		<circle x="#NA*#ill_x" radius="#sigma*#NA" />
+	</illumination>
+    
+    <pupil name="pupil">
+        <zernike />
+		<circle radius="#NA" mode="intersect" />
+    </pupil>
+    
+    <illumination name="max_illumination" sigma="0.2">
+		<circle radius="#sigma*#NA" />
+    </illumination>
+    <setting name="illumination">@max_illumination</setting>
+    <setting name="iterations">2</setting>
+    <setting name="normalization_method">model</setting>
+	
+	<setting name="sweep">test</setting>
+	<setting name="sweep_pos">bottom</setting>
+	<setting name="sweep_size">20</setting>
+	<setting name="colorbar">constant</setting>
+	<setting name="colormap">jet</setting>
+	<setting name="bg_color">w</setting>
+</data>

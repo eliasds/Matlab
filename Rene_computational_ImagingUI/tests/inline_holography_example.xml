@@ -1,0 +1,52 @@
+<data>
+    <setting name="pixel_size">@pixel_size=25nm</setting>
+    <setting name="size">512</setting>
+    <setting name="wavelength">13.5nm</setting>
+    
+    <setting name="particle_sigma">20nm</setting>
+    <var name="mask">
+		<pad size="1024" value="border">
+			<object name="obj_1" type="gaussian" sigma="#particle_sigma" offset_x="(rand(1)-0.5)*#size*#pixel_size" offset_y="(rand(1)-0.5)*#size*#pixel_size" />
+			<object name="obj_2" type="gaussian" sigma="#particle_sigma" offset_x="(rand(1)-0.5)*#size*#pixel_size" offset_y="(rand(1)-0.5)*#size*#pixel_size" />
+			<object name="obj_3" type="gaussian" sigma="#particle_sigma" offset_x="(rand(1)-0.5)*#size*#pixel_size" offset_y="(rand(1)-0.5)*#size*#pixel_size" />
+			<object name="obj_4" type="gaussian" sigma="#particle_sigma" offset_x="(rand(1)-0.5)*#size*#pixel_size" offset_y="(rand(1)-0.5)*#size*#pixel_size" />
+			<object name="mask_i" phase="@obj_1 + @obj_2 + @obj_3 + @obj_4" />
+			<image>@mask_i</image>
+		</pad>
+    </var>
+    <setting name="mask">@mask</setting>
+    
+    <setting name="NA">1</setting>
+    
+    <setting name="mode">propagate</setting>
+        
+	<measurementset illumination="@coherent" pupil="@pupil">
+		<if true="strcmp(#mode,'defocus')">
+			<object field="@mask">
+				<propagate defocus="(4:2:200)*1um" />
+			</object>
+		</if>
+		<if true="strcmp(#mode,'propagate')">
+			<var name="propagated">
+				<object field="@mask">
+					<propagate defocus="200um" />
+				</object>
+			</var>
+			<image>@propagated</image>
+			<object field="@propagated">
+				<propagate defocus="200um" />
+			</object>
+		</if>
+	</measurementset>
+    
+    <pupil name="pupil">
+        <zernike />
+		<circle radius="#NA" mode="intersect" />
+    </pupil>
+    
+    <illumination name="coherent"><circle radius="0" /></illumination>
+    
+	<setting name="colorbar">constant</setting>
+	<setting name="colormap">gray</setting>
+	<setting name="bg_color">w</setting>
+</data>

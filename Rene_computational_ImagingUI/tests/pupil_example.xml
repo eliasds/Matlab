@@ -1,0 +1,42 @@
+<data>
+    <setting name="pixel_size">@pixel_size=15nm</setting>
+    <setting name="wavelength">13.5nm</setting>
+    
+    <setting name="NA">0.33/8</setting>
+    
+    
+	<var name="tower">
+		<setparam name="image" value="flipud(#image)">
+			<imagecrop crop="960">
+				<image color="gray">files/Sather_Tower.jpg</image>
+			</imagecrop>
+		</setparam>
+	</var>
+    <setting name="size">size(@tower,1)</setting>
+        
+	<measurementset pupil="@pupil" illumination="@monopole">
+	<!--
+		<setparam name="image" value="angle(#image).*abs(#image)">
+			<image NA="0.9" defocus="10nm">@pupil</image>
+			<image NA="0.9" defocus="10nm" astigmatism_90="1nm">@pupil</image>
+		</setparam>
+		-->
+		<object field="@tower">
+			<propagate defocus="0nm" />
+			<propagate defocus="6000nm" />
+			<propagate defocus="6000nm" astigmatism_90="6nm" />
+		</object>
+	</measurementset>
+
+    <pupil name="pupil">
+        <zernike />
+		<circle radius="#NA" mode="intersect" />
+    </pupil>
+    
+    
+	<illumination name="monopole" sigma="0.0">
+		<circle radius="#sigma*#NA" />
+	</illumination>
+    
+    <setting name="colormap">gray</setting>
+</data>

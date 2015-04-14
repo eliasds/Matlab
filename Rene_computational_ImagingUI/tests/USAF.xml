@@ -1,0 +1,17 @@
+<data file="USAF.mat" wavelength="650nm" pixel_size="$ps">
+	<object name="usaf" amplitude="$quarter_1024" />
+	<measurementset NA="0.25" pupil="@pupil" illumination="@monopole">
+		<object field="@usaf">
+			<propagate defocus="linspace(-5um,5um,1)" />
+		</object>
+	</measurementset>
+    
+	<illumination name="monopole" sigma="@sigma=0.2">
+		<circle radius="#sigma*#NA" />
+	</illumination>
+    
+	<pupil name="pupil">
+		<zernike />
+		<circle radius="#NA" mode="intersect" />
+	</pupil>
+</data>

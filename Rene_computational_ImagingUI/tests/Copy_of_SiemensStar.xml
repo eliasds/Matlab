@@ -1,0 +1,57 @@
+<data wavelength="500nm" pixel_size="0.1um*2">
+	<var name="star2">
+        <imagecrop crop="254">
+        <imagecrop crop="255" offset_x="20.2px">
+            <resample power="-1">
+                <pad size="1024 + 512" offset_x="0" offset_y="0">
+                    <image color="alpha">files/Siemens_star.png</image>
+                </pad>
+            </resample>
+        </imagecrop>
+        </imagecrop>
+	</var>
+	<var name="starobj">1.4 - @star2</var>
+	<var name="star">@starobj / mean(reshape(@starobj,1,[]))</var>
+	<!--<var name="star">(@star2)/mean(reshape(@star2,1,[]))</var>-->
+	<setting name="size">size(@star,1)</setting>
+	<object name="maskstar" phase="@star/4*1pi" />
+	<measurementset NA="0.1" sigma="0.00001" pupil="@pupil" illumination="@monopole">
+		<object field="@maskstar">
+            <image>@star2</image>
+		</object>
+	</measurementset>
+	<setting name="mask">@maskstar</setting>
+    
+	<illumination name="monopole">
+		<circle radius="#sigma*#NA" />
+	</illumination>
+	
+    
+	<pupil name="pupil">
+		<zernike />
+		<circle radius="#NA" mode="intersect" />
+	</pupil>
+	
+    <setting name="tcc_enabled">1</setting>
+	
+    <setting name="reconstruction_mode">full</setting>
+    <setting name="iterations">@iterations=100</setting>
+    
+    <setting name="normalization_method">model</setting>
+    
+    <setting name="threshold">[3e-1000, 150]</setting>
+    <setting name="error_threshold">inf</setting>
+    <setting name="threshold_mode">independent</setting>
+    
+    
+    
+    <setting name="gradation_start">.1</setting>
+    <setting name="gradation_end">1</setting>
+    <setting name="gradation_alpha">-2</setting>
+    <setting name="gradation_threshold">0.9</setting>
+    
+    <setting name="gradation_B">=(#gradation_end - #gradation_start)/(1-exp(#gradation_alpha))</setting>
+    <setting name="gradation_A">#gradation_start + #gradation_B</setting>
+    <setting name="gradation_fn">=@(it)((#gradation_A - #gradation_B*exp(#gradation_alpha * (it/#gradation_threshold))).*(it&lt;#gradation_threshold) + #gradation_end*(it&gt;=#gradation_threshold))</setting>
+
+</data>

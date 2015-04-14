@@ -1,0 +1,11 @@
+<data import="@settings">
+	<var name="offsets_x">index(zeros(1,length(@params)),@offset_x_index={1},@offset_x_value={0})</var>
+	<var name="offsets_y">index(zeros(1,length(@params)),@offset_y_index={1},@offset_y_value={0})</var>
+	<measurementset>
+		<imagecrop crop="100"
+		           offset_x="index(@offsets_x,#index)"
+		           offset_y="index(@offsets_y,#index)">
+			<import params="@params" images="@images" />
+		</imagecrop>
+	</measurementset>
+</data>

@@ -1,0 +1,9 @@
+<data file="moustache_man_stack.mat" wavelength="$lambda" pixel_size="$ps">
+<var name="defocuses">$zvec</var>
+    <measurementset>
+        <image defocus="@defocuses">$Istack</image>
+    </measurementset>
+    
+    <object name="mask" phase="$Phi" />
+    <setting name="mask">@mask</setting>
+</data>
