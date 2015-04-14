@@ -1,0 +1,59 @@
+<data path="C:\Users\Rene\Desktop\rene\sharp data\SHARP_2013-08-05" wavelength="13.5nm">
+    <setting name="telecentric_angle_x">-1.7254</setting>
+    <setting name="telecentric_angle_y">-4.2794</setting>
+    
+    <setting name="telecentric_slope_x">tan(deg2rad(#telecentric_angle_x))</setting>
+    <setting name="telecentric_slope_y">tan(deg2rad(#telecentric_angle_y))</setting>
+    
+    <setting name="defocus_step">@defocus_step=309nm</setting>
+    
+    <object name="roughness" type="speckle" rms="100pm/#wavelength*4pi" correlation_length="100nm" option="real" seed="1" size="256" pixel_size="15nm" />
+    <object name="mask" phase="@roughness" />
+    
+    <measurementset NA="0.0825" illumination="@monopole" pixel_size="15nm" pupil="@pupil">
+        <normalizebackground mode="polynomial" bgorders="2" mask="@test">
+            <object field="@mask">
+                <propagate defocus="(300)nm" />
+            </object>
+        </normalizebackground>
+	</measurementset>
+    
+	<illumination name="monopole" sigma="@sigma=0.2">
+		<circle radius="#sigma*#NA" />
+	</illumination>
+    
+    
+	<shape name="test">
+		<circle radius="0.3" />
+	</shape>
+    
+    <setting name="defocus_offset">0nm</setting>
+    <pupil name="pupil" R="0.3" phase_value="0.5pi">
+        <zernike />
+        <circle radius="#NA*0.5" mode="multiply" value="exp(1i*#phase_value)" />
+        <circle radius="#NA" mode="intersect" y="#NA*#R" />
+    </pupil>
+
+    
+    
+    <setting name="reconstruction_mode">model</setting>
+    <setting name="iterations">@iterations=1</setting>
+    <setting name="cutoff_iteration">@iterations=1</setting>
+    
+    <setting name="normalization_method">mean</setting>
+    
+    <setting name="threshold">[0.5e-1, 0.4e-2]</setting>
+    <setting name="error_threshold">80</setting>
+    
+    
+    <setting name="gradation_start">.05</setting>
+    <setting name="gradation_end">1</setting>
+    <setting name="gradation_alpha">2</setting>
+    <setting name="gradation_threshold">0.85</setting>
+    
+    <setting name="gradation_B">=(#gradation_end - #gradation_start)/(1-exp(#gradation_alpha))</setting>
+    <setting name="gradation_A">#gradation_start + #gradation_B</setting>
+    <setting name="gradation_fn">=@(it,fx,fy)ones(size(fx))*((#gradation_A - #gradation_B*exp(#gradation_alpha * (it/#gradation_threshold))).*(it&lt;#gradation_threshold) + #gradation_end*(it&gt;=#gradation_threshold))</setting>
+
+    
+</data>
