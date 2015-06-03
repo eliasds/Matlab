@@ -17,3 +17,5 @@ set(0,'DefaultTextInterpreter','none');
 
 % for creating a cartesian coordinate system
 % set(gca,'YDir','normal');
+
+rehash toolboxcache
