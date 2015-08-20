@@ -1,11 +1,17 @@
-filename = 'Basler_acA2040-25gm__21407047__20150810_175623686_*.tiff';
+filename = 'Basler_acA2040-25gm.tiff';
 
 [pathstr, filename, ext] = fileparts(filename);
 filename = strrep(filename, '*', '');
-% filesort = dir([filename,'*',ext]);
-% numfiles = numel(filesort);
+filesort = dir([filename,'*',ext]);
+numfiles = numel(filesort);
+filename = filesort(numfiles).name;
+[pathstr, filename, ext] = fileparts(filename);
+filename = filename(1:end-4);
+filesort = dir([filename,'*',ext]);
+numfiles = numel(filesort);
+
 figure(123);
-for L = 560:9999
+for L = numfiles:9999
     figure(123);
     newfilename = [filename,num2str(L,'%0.4u'),ext];
     Holo = imread(newfilename);
