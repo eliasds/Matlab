@@ -1,3 +1,11 @@
+sprintf('Running GitHub Startup')
+
+% Add to Path
+addpath('D:\shuldman\GitHub\holography','D:\shuldman\GitHub\Matlab',...
+    'D:\shuldman\GitHub\Matlab\Spirals',...
+    'D:\shuldman\GitHub\Matlab\plotting',...
+    'D:\shuldman\GitHub\Matlab\Camille');
+    
 % Change default axes fonts.
 set(0,'DefaultAxesFontName', 'Helvetica')
 set(0,'DefaultAxesFontSize', 18)
