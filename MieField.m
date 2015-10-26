@@ -17,9 +17,10 @@ function E = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
 %   OUTPUTS:
 %   E = [Ex; Ey; Ez], in Cartesian Coordinates
 %
-% Version 5
-% 10/25/2015, Daniel Shuldman
-% Speed enhancement 1.5x. Reduced load on for loops and imbeded functions.
+%   Version 6
+%   10/25/2015, Daniel Shuldman
+%   Further speed enhancement (3x over original code, 2x over version 5).
+%   Reduced load on for loops and imbeded functions.
 %
 %%
 if nargin == 7
@@ -54,41 +55,35 @@ u = cos(theta);
     % the less digits of precision, the less unique
     % values of theta that need to be computed.
 thetaapprox = roundp(theta,digit);
-thetacompute = unique(thetaapprox);
+[thetacompute,~,indextheta] = unique(thetaapprox);
 % approximated scattering angle u
-uapprox = cos(thetaapprox);
 ucompute = cos(thetacompute);
 num = length(ucompute);
-
-S1 = zeros(Hsize);
-S2 = zeros(Hsize);
 
 Nmax=round(2+alpha+4*alpha.^(1/3));
 N=(1:Nmax);
 N2NN=(2*N+1)./(N.*(N+1));
-ab=Mie_ab(m,alpha);
-aN = ab(1,:);
-bN = ab(2,:);
+[~,aN,bN]=Mie_ab(m,alpha);
 
 wb=waitbar(0,'Calculating Mie Series...');
+p = NaN(Nmax,num);
+t = p;
 for j = 1:num
-    % S12
-    pt=Mie_pt(ucompute(j),Nmax);
-    pin =pt(1,:);
-    tin =pt(2,:);
-
-    pin=N2NN.*pin;
-    tin=N2NN.*tin;
-    S1j=(aN*pin'+bN*tin');
-    S2j=(aN*tin'+bN*pin');
-
-    S12tmp(j,:)=[S1j;S2j];
-    idx = find(uapprox==ucompute(j));
-    S1(idx) = S12tmp(j,1);
-    S2(idx) = S12tmp(j,2);
+    [~,p(:,j),t(:,j)] = Mie_pt(ucompute(j),Nmax);
+%     pin(j,:) = (p(:,j)'.*N2NN);
+%     tin(j,:) = (t(:,j)'.*N2NN)';
     waitbar(j/num,wb);
 end
 close(wb);
+% same as two commented lines above
+pin = bsxfun(@times, p', N2NN);
+tin = bsxfun(@times, t', N2NN);
+
+S1j = (aN*pin'+bN*tin');
+S2j = (aN*tin'+bN*pin');
+S1 = reshape(S1j(indextheta),size(thetaapprox));
+S2 = reshape(S2j(indextheta),size(thetaapprox));
+
 
 % x-polarized light, 
 % REF: [1] Ye Pu and Hui Meng, "Intrinsic aberrations due to Mie scattering in
