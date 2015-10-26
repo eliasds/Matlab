@@ -1,4 +1,8 @@
 function E = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
+%MieField creates a simulated electric field from Mie scattering particles.
+%   The ONLY approximation is to assume radiating field (kr>>1), which is
+%   commonly satisfied for visible range.
+%
 %   INPUTS
 %   n1, refractive index of the immersion medium
 %   n2, refractive index of the sphere
@@ -12,16 +16,11 @@ function E = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
 %
 %   OUTPUTS:
 %   E = [Ex; Ey; Ez], in Cartesian Coordinates
-% last modified by Lei Tian, Dec 15, 2010
-% version 3
-%   fixed the appoximation in theta. 
-% version 4
-% 02/27/2013, Lei Tian
-% allow off-center particles
-%%
-% The ONLY approximation is to assume radiating field (kr>>1), which is
-% commonly satisfied for visible range.
-
+%
+% Version 5
+% 10/25/2015, Daniel Shuldman
+% Speed enhancement 1.5x. Reduced load on for loops and imbeded functions.
+%
 %%
 if nargin == 7
     digit = 4;
