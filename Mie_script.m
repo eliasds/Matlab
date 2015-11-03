@@ -5,17 +5,17 @@ clear all
 
 %% system parameters: NA needs to be large enough
 % size of hologram
-N = 2048-200;
-zpad = N+200;
+N = 512;
+zpad = 512;
 %Magnification
 mag=4;
 % pixel size
-ps = 1E-6;
+ps = 5.5E-6;
 dpix = ps/mag; % in meters
 % number of particles
-Np = 10;
+Np = 8;
 % Use a Coded Aperture Mask
-maskon = false;
+maskon = true;
 
 % random particle size between dmin and dmax in meters
 dmin = 10E-6;
@@ -89,15 +89,10 @@ Field = 0;
 % E = Mie_x_radiation2(n1, n2, d(1), lambda, N, dpix, z_obj(1), [ x(1), y(1)], 4);
 % Etot = Etot+E(:,:,1).*exp(-1i*k*z_obj(1));
 
-
+% Ex_all = zeros(N,N,Np);
 for p = 1:Np
-    E = MieField(n1, n2, d(p), lambda, N, dpix, z_obj(p), [ x(p), y(p)], 4);
-    Ex = E(:,:,1).*exp(-1i*k*z_obj(p));
-%     if maskon==true
-%         Ex2 = propagate(Ex,lambda/n1,-z_obj(p),ps/mag,'zpad',zpad,'cpu');
-%         Ex = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'mask',maskpadded,'cpu');
-%     end
-    
+    E = MieField(n1, n2, d(p), lambda, N, dpix, abs(z_obj(p)), [x(p), y(p)], 4);
+    Ex = E(:,:,1).*exp(-1i*k*abs(z_obj(p)));
     Ex2 = propagate(Ex,lambda/n1,-abs(z_obj(p)),ps/mag,'zpad',zpad);
     if maskon==true
         Ex = propagate(Ex2,lambda/n1,-z_obj(p),ps/mag,'zpad',zpad,'mask',maskpadded);
@@ -112,7 +107,8 @@ for p = 1:Np
 %         'XData',[1 N],'YData',[1 N]);
     
     % record total field for comparison.
-    Field = Field+Ex;
+    Field = Field + Ex;
+%     Ex_all(:,:,p) = Ex;
     
 end
 
@@ -123,8 +119,8 @@ HoloMasked = ifft2(ifftshift(Holo_fft.*mask));
 
 theta = atan(ps*N/2/max(z_obj));
 NA = n1*sin(theta);
-lat_res = lambda/NA % lateral resolution
-DOF = lambda/NA^2 % depth of focus
+xy_res = lambda/NA; % lateral resolution
+DOF = lambda/NA^2; % depth of focus
 
 % set(0,'DefaultFigureWindowStyle','docked') %Dock all figures
 figure; imagesc(Holo,[0 max(Holo(:))]); colormap gray; colorbar; axis image; axis ij;
@@ -132,5 +128,5 @@ figure; imagesc(Holo,[0 max(Holo(:))]); colormap gray; colorbar; axis image; axi
 %     figure; imagesc(mask); colormap gray; colorbar; axis image; axis ij;
 % end
 
-save(fn, 'Holo', 'Field', 'z_obj', 'x', 'y', 'd', 'dpix', 'lambda', 'n1', 'n2', 'n3', 'zmin', 'zmax', 'mag', 'ps', 'mask', 'maskpadded', 'theta', 'NA', 'DOF');
+save(fn, 'Holo', 'Field', 'z_obj', 'x', 'y', 'N', 'Np', 'd', 'dpix', 'lambda', 'k', 'n1', 'n2', 'n3', 'zmin', 'zmax', 'mag', 'ps', 'mask', 'maskpadded', 'maskon', 'theta', 'NA', 'xy_res', 'DOF');
 toc
