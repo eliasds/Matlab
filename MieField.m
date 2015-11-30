@@ -1,4 +1,4 @@
-function E = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
+function [E,Ex,Ey,Ez] = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
 %MieField creates a simulated electric field from Mie scattering particles.
 %   The ONLY approximation is to assume radiating field (kr>>1), which is
 %   commonly satisfied for visible range.
@@ -17,10 +17,10 @@ function E = MieField(n1, n2, d, lambda, Hsize, dpix, Z, cen, digit)
 %   OUTPUTS:
 %   E = [Ex; Ey; Ez], in Cartesian Coordinates
 %
-%   Version 6
-%   10/25/2015, Daniel Shuldman
-%   Further speed enhancement (3x over original code, 2x over version 5).
-%   Reduced load on for loops and imbeded functions.
+%   Version 7
+%   11/30/2015, Daniel Shuldman
+%   First attempt to remove aliasing due to
+%   spatial frequency greater than 1/(2 pixels)
 %
 %%
 if nargin == 7
@@ -42,6 +42,7 @@ rmesh = sqrt(xmesh.^2+ymesh.^2);
 
 % azimuthal angle
 phi = acos(xmesh./rmesh);
+%remove NaN's
 phi(rmesh==0) = 0;
 % distance
 r = sqrt(rmesh.^2+Z^2);
@@ -49,15 +50,35 @@ r = sqrt(rmesh.^2+Z^2);
 spherical_term = 1i./(k*r).*exp(1i*k*r);
 % scattering angle
 theta = atan(rmesh/Z);
+
+% Remove Aliasing - create a maximum scattering angle to meet Nyquist Limits
+min_integer = ceil(k*Z/pi);
+all_integers = (min_integer:min_integer+9999);
+all_ring_pos = [0,sqrt((all_integers*pi/k).^2 - Z^2)];
+all_delta_rings = diff(all_ring_pos);
+max_rings = sum(all_delta_rings/2 > dpix)+1;
+try
+    max_ring_pos = max(all_ring_pos(max_rings),d/2);
+catch
+    max_ring_pos = d;
+end
+thetamax = atan(max_ring_pos/Z);
+theta(theta>thetamax) = pi/2;
+disp(['Number of Nyquist Limited Diffraction Rings: ',num2str(max_rings)]);
+disp(['Maximum Scattering Radius and Angle: ',num2str(max_ring_pos),' & ',num2str(thetamax)]);
+
 % original scattering angle 
 u = cos(theta);
+% u(abs(u)<1E-4) = 0; % Make Cosines of Pi/2 = 0;
 % approximate theta, precision up to 5 digits
     % the less digits of precision, the less unique
     % values of theta that need to be computed.
 thetaapprox = roundp(theta,digit);
+% thetaapprox(thetaapprox>1.57) = pi/2; % Make theta of approx.pi/2 = pi/2;
 [thetacompute,~,indextheta] = unique(thetaapprox);
 % approximated scattering angle u
 ucompute = cos(thetacompute);
+% ucompute(abs(ucompute)<1E-4) = 0; % Make Cosines of Pi/2 = 0;
 num = length(ucompute);
 
 Nmax=round(2+alpha+4*alpha.^(1/3));
@@ -65,16 +86,19 @@ N=(1:Nmax);
 N2NN=(2*N+1)./(N.*(N+1));
 [~,aN,bN]=Mie_ab(m,alpha);
 
-wb=waitbar(0,'Calculating Mie Series...');
+% wb=waitbar(0,'Calculating Mie Series...');
+multiWaitbar('Calculating Mie Series...',0);
 p = NaN(Nmax,num);
 t = p;
 for j = 1:num
     [~,p(:,j),t(:,j)] = Mie_pt(ucompute(j),Nmax);
 %     pin(j,:) = (p(:,j)'.*N2NN);
 %     tin(j,:) = (t(:,j)'.*N2NN)';
-    waitbar(j/num,wb);
+%     waitbar(j/num,wb);
+    multiWaitbar('Calculating Mie Series...',j/num);
 end
-close(wb);
+% close(wb);
+multiWaitbar('closeall');
 % same as two commented lines above
 pin = bsxfun(@times, p', N2NN);
 tin = bsxfun(@times, t', N2NN);
@@ -90,11 +114,13 @@ S2 = reshape(S2j(indextheta),size(thetaapprox));
 % particle holography," J. Opt. Soc. Am. A 20, 1920-1932 (2003) 
 % [2] :/ Tsamg. K. A. Kong, Scattering of Electromagnetic waves
 % Ex
-E(:,:,1) = spherical_term .* (cos(phi).^2.*u.*S2 +sin(phi).^2.*S1);
+Ex = spherical_term .* (cos(phi).^2.*u.*S2 +sin(phi).^2.*S1);
 % Ey
-E(:,:,2) = spherical_term .* (sin(phi).*cos(phi)).*(S2.*u -S1);
+Ey = spherical_term .* (sin(phi).*cos(phi)).*(S2.*u -S1);
 % Ez
-E(:,:,3) = -spherical_term .* cos(phi).*sin(theta).*S2;
+Ez = -spherical_term .* cos(phi).*sin(theta).*S2;
+% Etot
+E(:,:,1) = Ex; E(:,:,2) = Ey; E(:,:,3) = Ez; 
 
 end
 
