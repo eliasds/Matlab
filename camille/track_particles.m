@@ -8,40 +8,43 @@ appear_thresh = 10;
 blink_keep = 5;
 
 tic
-
-xyzLocCentroid1 = xyzLocCentroid;
-for i = 1:length(xyzLocCentroid)
-    xyzLocCentroid1(i).time(:,3) = xyzLocCentroid1(i).time(:,3)/ps;
+xyzLocCentroidScaled = xyzLocCentroid;
+for i = 1:length(xyzLocCentroidScaled)
+    xyzLocCentroidScaled(i).time(:,3) = xyzLocCentroidScaled(i).time(:,3)/(ps/mag);
 end
 
 %Initialize struct array, with all particles in frame 1 + 2
 particles = struct([]);
-init = xyzLocCentroid1(1).time;  
+init = xyzLocCentroidScaled(1).time;  
 for i = 1:size(init,1)
     particles(i).pos(1,:) = init(i,:);
     particles(i).match(1,1) = 0;
 end
 
 %Go through each frame, tracking particles
-for L = 2:length(xyzLocCentroid)
-    mat1 = xyzLocCentroid1(L-1).time;
-    mat2 = xyzLocCentroid1(L).time;
+multiWaitbar('Tracking Particles A...',0);
+for L = 2:length(xyzLocCentroidScaled)
+    mat1 = xyzLocCentroidScaled(L-1).time;
+    mat2 = xyzLocCentroidScaled(L).time;
     [m,~] = size(mat1);
     [n,~] = size(mat2);
     
     %Creates dist matrix between every particle in frame L and L + 1
     dist_mat = nan(m,n);
+    multiWaitbar('Tracking Particles B...',0);
     for M = 1:m
         for N = 1:n
             dist_mat(M,N) = sqrt((mat1(M,1)-mat2(N,1))^2 + ...
                 (mat1(M,2)-mat2(N,2))^2 + (mat1(M,3)-mat2(N,3))^2);
         end
+        multiWaitbar('Tracking Particles B...',M/m);
     end
     
     %Thresholds + finds match
     dist_mat_logic = dist_mat < dist_thresh;
     
-    %Copies pos for next blink_keep frames    
+    %Copies pos for next blink_keep frames  
+    multiWaitbar('Tracking Particles C...',0);
     for j = 1:length(particles)
         repeat = 0;
         for i = 1:blink_keep
@@ -57,11 +60,14 @@ for L = 2:length(xyzLocCentroid)
             particles(j).match(L,1) = 0;
             particles(j).pos(L,:) = particles(j).pos(L-1,:);
         end
+        multiWaitbar('Tracking Particles C...',j/length(particles));
     end
+    
     
     partLength = length(particles);
     dist = zeros(n, partLength);
     keep = ones(partLength,1);
+    multiWaitbar('Tracking Particles D...',0);
     for j = 1:partLength
         for i = 1:n
             dist(i,j) = sqrt((particles(j).pos(L-1,1)-mat2(i,1))^2 + ...
@@ -73,12 +79,14 @@ for L = 2:length(xyzLocCentroid)
                 keep(j,1) = keep(j,1) + 1;
             end
         end
+        multiWaitbar('Tracking Particles D...',j/partLength);
     end
             
     
     %Append matches in L+1 to corresponding particles or adds them as new
     %particles
     partLength = length(particles);
+    multiWaitbar('Tracking Particles E...',0);
     for i = 1:n
         isInMatch = 0;  
         index = find(dist_mat_logic(:,i));
@@ -114,10 +122,14 @@ for L = 2:length(xyzLocCentroid)
             particles(end+1).pos(1:L-1,:) = nan(L-1,3);
             particles(end).match(1:L,1) = zeros(L,1);
             particles(end).pos(L,:) = mat2(i,:);
-        end        
+        end
+        multiWaitbar('Tracking Particles E...',i/n);
     end
+    multiWaitbar('Tracking Particles A...',L/length(xyzLocCentroidScaled));
 
 end
+
+multiWaitbar('closeall');
 
 partLength = length(particles); 
 
@@ -146,18 +158,24 @@ end
 
 
 %Store particles as fn of time (to plot)
-for L = 1:length(xyzLocCentroid)    
+for L = 1:length(xyzLocCentroidScaled)    
     index = 1;
-    xyzLocOld(L).time = []; 
+    xyzLocTracked(L).time = []; 
     for i = 1:length(particles)
         if ~isempty(particles(i).pos) &&~isnan(particles(i).pos(L,1))
-            xyzLocOld(L).time(index,1:3) = round(particles(i).pos(L,1:3));
-            xyzLocOld(L).time(index,3) = xyzLocOld(L).time(index,3)*ps;
-            xyzLocOld(L).time(index,4) = i;
+            xyzLocTracked(L).time(index,1:3) = round(particles(i).pos(L,1:3));
+            xyzLocTracked(L).time(index,3) = xyzLocTracked(L).time(index,3)*ps;
+            xyzLocTracked(L).time(index,4) = i;
             index = index + 1;
         end
     end
 end
 
+if ~exist('particlefilename','var')
+    particlefilename = 'temp';
+    warning('File name not specified. Saving to temp_Tracked.mat');
+end
     
+save([particlefilename,'_Tracked.mat'], 'xyzLocTracked')
+
 toc
