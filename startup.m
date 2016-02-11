@@ -2,10 +2,14 @@ sprintf('Running GitHub Startup')
 
 % Add to Path
 addpath('D:\shuldman\GitHub\holography','D:\shuldman\GitHub\Matlab',...
-    'D:\shuldman\GitHub\Matlab\Spirals',...
     'D:\shuldman\GitHub\Matlab\plotting',...
     'D:\shuldman\GitHub\Matlab\Camille');
     
+% Remove confusing path
+warning('off','all')
+rmpath(genpath('X:\Volker\Dropbox\code and data'));
+warning('on','all')
+
 % Change default axes fonts.
 set(0,'DefaultAxesFontName', 'Helvetica')
 set(0,'DefaultAxesFontSize', 18)
@@ -25,5 +29,9 @@ set(0,'DefaultTextInterpreter','none');
 
 % for creating a cartesian coordinate system
 % set(gca,'YDir','normal');
+
+% Create 'blacklines' colormap
+blacklines = colormap(lines);
+blacklines(1,1:3)=0;
 
 rehash toolboxcache
