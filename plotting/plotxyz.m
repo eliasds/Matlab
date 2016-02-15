@@ -28,12 +28,15 @@ function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
 tic
 % clear all
 undock
-vidonflag = false; %Set to true to save video
+vidonflag = true; %Set to true to save video
+holdflag = false;
+colorstr = ',''b'''; % Default setting - does not seperate particles with colors
 plotvortflag = false; %Set to true if you want to plot approx location of vorticella
 insertbackgroundflag = false;
 drawlinesflag = false;
-framerate=40;
-avgnumframes=0;
+latecropflag = false;
+framerate = 40;
+avgnumframes = 0;
 %[m,n]=size(Ein);
 % radix2 = 2048;
 % filename='Basler_acA2040-25gm__21407047';
@@ -139,7 +142,6 @@ catch
         end
     end
 end
-
 % rect_xydxdy = [vortloc(1)-radix2/2,vortloc(2)-radix2,radix2-1,radix2-1]; %Cropping
 % rect_xydxdy = [Xceil,Yceil,xmax-1,ymax-1]; %Cropping
 % rect_xydxdy = [512 512 1023 1023];
@@ -156,7 +158,7 @@ fignum=1001;
 handle=figure(fignum); set(handle, 'Position', [100 100 768 512])
 view(0,0) %flat overlaying hologram
 [az,el] = view;
-plotstr = 'figure(fignum); scatter3(xscale*xyzLoc(L+M).time(:,1),zscale*(-z2+xyzLoc(L+M).time(:,3)),yscale*(ymax-xyzLoc(L+M).time(:,2)),30,''filled'');';
+plotstr = 'figure(fignum); scatter3(xscale*xyzLoc(L+M).time(:,1),zscale*(-z2+xyzLoc(L+M).time(:,3)),yscale*(ymax-xyzLoc(L+M).time(:,2)),30,''filled''';
 tmp = z1;
 z1 = max(tmp,z2);
 z2 = min(tmp,z2);
@@ -166,11 +168,6 @@ while ~isempty(varargin)
         
         case 'PAUSE'
             pauseval = varargin{2};
-            varargin(1:2) = [];
-            
-        case 'IMCROP'
-            rect_xydxdy = varargin{2};
-            rect_xydxdy(3:4) = rect_xydxdy(3:4)-1;
             varargin(1:2) = [];
             
         case 'BACKGROUND'
@@ -202,6 +199,25 @@ while ~isempty(varargin)
             disp(['NOW using Constants from ',constantsfile]);
             varargin(1:2) = [];
             
+        case 'IMCROP'
+            rect_xydxdy = varargin{2};
+            rect_xydxdy(3:4) = rect_xydxdy(3:4)-1;
+            xmax = rect_xydxdy(3); % max pixels in x propagation
+            ymax = rect_xydxdy(4); % max pixels in y propagation
+            varargin(1:2) = [];
+            
+        case 'LATECROP'
+            latecropflag = true;
+            if numel(varargin{2}) ~= 4
+                rect_xydxdy_copy = [(varargin{2}(1:2)), 1023,1023];
+            else
+                rect_xydxdy_copy = [varargin{2}];
+                rect_xydxdy_copy(3:4)=rect_xydxdy_copy(3:4)-1;
+            end
+            xmax = rect_xydxdy(3); % max pixels in x propagation
+            ymax = rect_xydxdy(4); % max pixels in y propagation
+            varargin(1:2) = [];
+            
         case 'VIDEO'
             varargin(1) = []; 
             vidonflag = true;
@@ -214,11 +230,26 @@ while ~isempty(varargin)
             lastframe = varargin{2};
             varargin(1:2) = [];
             
+        case 'AVERAGE'
+            avgnumframes = varargin{2};
+            varargin(1:2) = [];
+            
+        case 'HOLD'
+            holdflag = true;
+            varargin(1) = [];
+            
+        case 'COLOR' % plot particles with different color, only works with track_particles
+            colorstr = ',''CData'',xyzLoc(L+M).time(:,4));colormap(jet(125)';
+            varargin(1) = [];
+            
         otherwise
             error(['Unexpected option: ' varargin{1}])
             
     end
 end
+
+numframes = eval(lastframe)-avgnumframes;
+
 
 if insertbackgroundflag == true;
     filename = strcat(dirname,filename);
@@ -231,15 +262,29 @@ if insertbackgroundflag == true;
     end
 end
 
+
+% Change Default Crop Parameters
+if latecropflag == true
+    rect_xydxdy = rect_xydxdy_copy;
+    xmax = rect_xydxdy(3); % max pixels in x propagation
+    ymax = rect_xydxdy(4); % max pixels in y propagation
+end
+
+
 % mov(eval(lastframe)-avgnumframes).cdata = [];
 % mov(eval(lastframe)-avgnumframes).colormap = [];
 mov(eval(lastframe)-avgnumframes) = struct('cdata',zeros(rect_xydxdy(4),rect_xydxdy(3),3,'uint8'),'colormap',[]);
 
 L=1;
 M=0;
+plotstr = [plotstr,colorstr,');'];
 eval(plotstr)
 for L=1:eval(lastframe)-avgnumframes
-    hold off
+    if holdflag == true
+        hold on
+    else
+        hold off
+    end
     clf('reset')
     view([az,el])
 %     figure(fignum)
@@ -284,7 +329,7 @@ for L=1:eval(lastframe)-avgnumframes
     
     axis([0,ceil(2*xscale*xmax)/2,0,ceil(zscale*zmax),0,ceil(2*yscale*ymax)/2]);
 
-    hold off
+%     hold off
     xlabel('(mm)')
     zlabel('(mm)')
     ylabel('Through Focus (mm)')
