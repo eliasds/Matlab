@@ -19,6 +19,6 @@ while 1
     HoloFFT = log10(abs(fftshift(fft2(Holo))));
     HoloFFT = (HoloFFT - min(HoloFFT(:)))/(max(HoloFFT(:))-min(HoloFFT(:)));
     HoloFFT_adapthisteq = adapthisteq(HoloFFT);
-%     figure(fignum);imagesc(HoloFFT_adapthisteq);colormap gray;axis image; axis xy; title([filenameinit,num2str(numfiles,'%0.4u'),'  Dyn Range: ',num2str(dynrange0),'-',num2str(dynrange1)]);drawnow
+%     figure(fignum);imagesc(HoloFFT_adapthisteq,[0.35 1]);colormap gray;axis image; axis xy; title([filenameinit,num2str(numfiles,'%0.4u'),'  Dyn Range: ',num2str(dynrange0),'-',num2str(dynrange1)]);drawnow
     figure(fignum);subplot(3,4,[1:3 5:7 9:11]);imagesc(HoloFFT_adapthisteq,[0.35 1]);colormap gray;axis image; axis xy; title([filenameinit,num2str(numfiles,'%0.4u'),'  Dyn Range: ',num2str(dynrange0),'-',num2str(dynrange1)]);subplot(3,4,4);histogram(Holo(:));axis off;title('Histogram');drawnow
 end
