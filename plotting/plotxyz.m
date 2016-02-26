@@ -1,6 +1,8 @@
-%% Plot 3D Particle information
 function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
-% Version 2.0
+%% plotxyz - Plot 3D Particle information
+%
+%            Daniel Shuldman <elias.ds@gmail.com>
+%            Version 2.1
 % Options:
 %   'pause',pausevaluemilliseconds
 %   'view',[az,el]  % Some good perspectives are:  
@@ -10,7 +12,6 @@ function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
     % view(0,0) %flat overlaying hologram (default)
     % view(180,0) %reverse flat
     % view(0,90) %Projected along x-axis to view changes in z
-
 
 
 %% Idea for finding real max and min z values:
@@ -28,6 +29,7 @@ function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
 tic
 % clear all
 undock
+triperiod=20;
 vidonflag = true; %Set to true to save video
 holdflag = false;
 colorstr = ',''b'''; % Default setting - does not seperate particles with colors
@@ -37,6 +39,7 @@ drawlinesflag = false;
 latecropflag = false;
 framerate = 40;
 avgnumframes = 0;
+jitterflag = false;
 %[m,n]=size(Ein);
 % radix2 = 2048;
 % filename='Basler_acA2040-25gm__21407047';
@@ -48,7 +51,9 @@ avgnumframes = 0;
 currdir = pwd;
 try
     [dirname, filename, ext] = fileparts(xyzfile);
-    varnam = who('-file',xyzfile); xyzLoc=load(xyzfile,varnam{1}); xyzLoc=xyzLoc.(varnam{1});
+    varnam = who('-file',xyzfile);
+    xyzLoc=load(xyzfile,varnam{1});
+    xyzLoc=xyzLoc.(varnam{1});
     movfilename = xyzfile(1:end-4);
     if ~isempty(strfind(movfilename,'tracked'))
         trackedpos = strfind(movfilename,'tracked');
@@ -56,7 +61,11 @@ try
     end
 catch
     xyzLoc = xyzfile;
-    movfilename = 'plotxyzVID';
+    try
+        movfilename = particlefilename;
+    catch
+        movfilename = 'plotxyzVID';
+    end
 end
 
 
@@ -238,9 +247,17 @@ while ~isempty(varargin)
             holdflag = true;
             varargin(1) = [];
             
-        case 'COLOR' % plot particles with different color, only works with track_particles
+        case 'COLOR' %plot particles with different color, only works with track_particles
             colorstr = ',''CData'',xyzLoc(L+M).time(:,4));colormap(jet(125)';
             varargin(1) = [];
+            
+        case 'JITTER' %Create plot at various angles to emphasize 3D nature
+            jitterflag = true;
+            varargin(1) = [];
+            
+        case 'FILENAME'
+            movfilename = varargin{2};
+            varargin(1:2) = [];
             
         otherwise
             error(['Unexpected option: ' varargin{1}])
@@ -280,13 +297,18 @@ M=0;
 plotstr = [plotstr,colorstr,');'];
 eval(plotstr)
 for L=1:eval(lastframe)-avgnumframes
+    deltadeg=triperiod*(sawtooth(2*pi*L/triperiod/4,.5)+1)/8;
     if holdflag == true
         hold on
     else
         hold off
     end
     clf('reset')
-    view([az,el])
+    if jitterflag == true
+        view([az+deltadeg,el])
+    else
+        view([az,el])
+    end
 %     figure(fignum)
 %     for M=1:avgnumframes
 %         groupz(:,M)=xyzLoc(L+M-1).time(:,3);
@@ -327,7 +349,9 @@ for L=1:eval(lastframe)-avgnumframes
         end
     end
     
+    axis equal
     axis([0,ceil(2*xscale*xmax)/2,0,ceil(zscale*zmax),0,ceil(2*yscale*ymax)/2]);
+
 
 %     hold off
     xlabel('(mm)')
@@ -337,7 +361,11 @@ for L=1:eval(lastframe)-avgnumframes
     grid on
     grid minor
     box on
-    view([az,el])
+    if jitterflag == true
+        view([az+deltadeg,el])
+    else
+        view([az,el])
+    end
     drawnow
 %     axis image
     if vidonflag==true
@@ -349,8 +377,8 @@ end
 hold off
 
 if vidonflag==true
-    if ischar(xyzfile)
-        if ~isempty(strfind(xyzfile,'tracked'))
+    if ischar(xyzfile) && isequal('plotxyzVID',movfilename)
+        if ~isempty(strfind(xyzfile,'tracked')) 
             writerObj = VideoWriter([xyzfile(1:end-4),'_3DParticleDetectionVideo_rand',num2str(uint8(rand*100))],'MPEG-4');
         end
     else
