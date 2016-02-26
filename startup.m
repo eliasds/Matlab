@@ -31,7 +31,9 @@ set(0,'DefaultTextInterpreter','none');
 % set(gca,'YDir','normal');
 
 % Create 'blacklines' colormap
+tempfig = figure(999999);
 blacklines = colormap(lines);
 blacklines(1,1:3)=0;
+close(tempfig)
 
 rehash toolboxcache
