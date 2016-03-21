@@ -11,11 +11,12 @@ xscale = 1000; % convert axis to mm
 yscale = 1000; % convert axis to mm
 zscale = 1000; % convert axis to mm
 tscale = 1; % change to 1000 to convert time to ms
+numofpixels = 1024;
 fps = 20; dt = tscale/fps; %Frames per second. dt is time between frames in ms
 
 
-xmax = cropbox(2,3)*ps/mag; % max x value in data to plot
-ymax = cropbox(2,4)*ps/mag; % max y value in data to plot
+xmax = numofpixels*ps/mag; % max x value in data to plot
+ymax = numofpixels*ps/mag; % max y value in data to plot
 zmax = abs(z2-z1); % max distance in z propagation
 zmin = min(z1,z2);
 figure(fignum);
