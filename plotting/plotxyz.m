@@ -154,11 +154,13 @@ end
 % rect_xydxdy = [vortloc(1)-radix2/2,vortloc(2)-radix2,radix2-1,radix2-1]; %Cropping
 % rect_xydxdy = [Xceil,Yceil,xmax-1,ymax-1]; %Cropping
 % rect_xydxdy = [512 512 1023 1023];
-xmax = rect_xydxdy(3); % max pixels in x propagation
-ymax = rect_xydxdy(4); % max pixels in y propagation
+xmax = rect_xydxdy(3)*ps/mag; % max pixels in x propagation
+ymax = rect_xydxdy(4)*ps/mag; % max pixels in y propagation
 zmax = abs(z2-z1); % max distance in z propagation
-xscale = 1000*ps/mag; %recontructed pixel distance in mm
-yscale = 1000*ps/mag; %recontructed pixel distance in mm
+% xscale = 1000*ps/mag; %recontructed pixel distance in mm
+% yscale = 1000*ps/mag; %recontructed pixel distance in mm
+xscale = 1000; %recontructed pixel distance in mm
+yscale = 1000; %recontructed pixel distance in mm
 zscale = 1000; %recontructed distance in mm
 % lastframe = 'numfiles';
 % lastframe = '2';
