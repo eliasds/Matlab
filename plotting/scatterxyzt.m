@@ -1,4 +1,4 @@
-function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
+function [xyzLocMat, xyzfile] = scatterxyzt(xyzfile, particlefilename, varargin)
 %% plotxyz - Plot 3D Particle information
 %
 %            Daniel Shuldman <elias.ds@gmail.com>
@@ -19,8 +19,8 @@ function [xyzLoc, xyzfile] = plotxyz(xyzfile, varargin)
 % 5.02mm instead of 5mm
 %
 % for L=1:512
-% Mmin(L)=min(xyzLoc(1, L).time(:,3));
-% Mmax(L)=max(xyzLoc(1, L).time(:,3));
+% Mmin(L)=min(xyzLocMat(1, L).time(:,3));
+% Mmax(L)=max(xyzLocMat(1, L).time(:,3));
 % end
 % [M,F]=mode(Mmin);
 % [M,F]=mode(Mmax);
@@ -40,139 +40,11 @@ latecropflag = false;
 framerate = 40;
 avgnumframes = 0;
 jitterflag = false;
-%[m,n]=size(Ein);
-% radix2 = 2048;
-% filename='Basler_acA2040-25gm__21407047';
-% ext = 'tiff';
-% xyzfile=['analysis-20150413/Basler_acA2040-25gm-th8E-02_dernum3-15_day73606793391.mat'];
-% dirname='D:\shuldman\20150325\10mmCuvette2mmOutside_MaxParticlesTrial2\';
-% xyzfile=['analysis-20150414\Basler_acA2040-25gm-th1E-01_dernum3-8_day73606852005.mat'];
-% dirname='D:\shuldman\20150325\10mmCuvetteHalfwayIn_MaxParticlesTrial2\';
 currdir = pwd;
-try
-    [dirname, filename, ext] = fileparts(xyzfile);
-    varnam = who('-file',xyzfile);
-    xyzLoc=load(xyzfile,varnam{1});
-    xyzLoc=xyzLoc.(varnam{1});
-    movfilename = xyzfile(1:end-4);
-    if ~isempty(strfind(movfilename,'tracked'))
-        trackedpos = strfind(movfilename,'tracked');
-        movfilename = movfilename(1:trackedpos-1);
-    end
-catch
-    xyzLoc = xyzfile;
-    try
-        movfilename = particlefilename;
-    catch
-        movfilename = 'plotxyzVID';
-    end
-end
-
-
-try
-    varnam = who('-file','background.mat');
-    dirname = pwd;
-    background = load([dirname,'\background.mat'],varnam{1});
-    background=background.(varnam{1});
-    [m,n]=size(background);
-catch
-    try
-        cd ..\
-        varnam = who('-file','background.mat');
-        dirname = pwd;
-        background = load([dirname,'\background.mat'],varnam{1});
-        background=background.(varnam{1});
-        [m,n]=size(background);
-        cd(currdir);
-    catch
-        try
-            cd ..\
-            varnam = who('-file','background.mat');
-            dirname = pwd;
-            background = load([dirname,'\background.mat'],varnam{1});
-            background=background.(varnam{1});
-            [m,n]=size(background);
-            cd(currdir);
-        catch
-            m = 2048;
-            n = m;
-            cd(currdir);
-        end
-    end
-end
-
-try
-    load([movfilename,'constants.mat']);
-    if ~exist('rect_xydxdy','var')
-        if ~exist('rect','var')
-            rect_xydxdy = [1 1 n m];
-        else
-            eval('rect_xydxdy = rect;');
-            clear('rect');
-        end
-    end
-    disp(['Using Constants from ',movfilename(1:end-4),'constants.mat']);
-catch
-    try
-        cd ..\
-        load('constants.mat');
-            if ~exist('rect_xydxdy','var')
-                if ~exist('rect','var')
-                    rect_xydxdy = [1 1 n m];
-                else
-                    eval('rect_xydxdy = rect;');
-                    clear('rect');
-                end
-            end
-        cd(currdir);
-        disp(['Using Constants from ',pwd,'\constants.mat']);
-    catch
-        try
-            cd ..\
-            load('constants.mat');
-                if ~exist('rect_xydxdy','var')
-                    if ~exist('rect','var')
-                        rect_xydxdy = [1 1 n m];
-                    else
-                        eval('rect_xydxdy = rect;');
-                        clear('rect');
-                    end
-                end
-            cd(currdir);
-            disp(['Using Constants from ',pwd,'\constants.mat']);
-        catch
-            ps=6.5e-6;
-            mag = 4;
-            z1 = 0;
-            z2 = 10E-3;
-            rect_xydxdy = [1 1 n m];
-            disp(['Using Default Constants; ps=6.5E-6, mag=4, z1=0, z2=10E-3, rect=',num2str(rect_xydxdy)]);
-            cd(currdir);
-        end
-    end
-end
-% rect_xydxdy = [vortloc(1)-radix2/2,vortloc(2)-radix2,radix2-1,radix2-1]; %Cropping
-% rect_xydxdy = [Xceil,Yceil,xmax-1,ymax-1]; %Cropping
-% rect_xydxdy = [512 512 1023 1023];
-xmax = rect_xydxdy(3)*ps/mag; % max pixels in x propagation
-ymax = rect_xydxdy(4)*ps/mag; % max pixels in y propagation
-zmax = abs(z2-z1); % max distance in z propagation
-% xscale = 1000*ps/mag; %recontructed pixel distance in mm
-% yscale = 1000*ps/mag; %recontructed pixel distance in mm
-xscale = 1000; %recontructed pixel distance in mm
-yscale = 1000; %recontructed pixel distance in mm
-zscale = 1000; %recontructed distance in mm
-% lastframe = 'numfiles';
-% lastframe = '2';
-lastframe = 'length(xyzLoc)';
 fignum=1001;
-handle=figure(fignum); set(handle, 'Position', [100 100 768 512])
 view(0,0) %flat overlaying hologram
 [az,el] = view;
-plotstr = 'figure(fignum); scatter3(xscale*xyzLoc(L+M).time(:,1),zscale*(-z2+xyzLoc(L+M).time(:,3)),yscale*(ymax-xyzLoc(L+M).time(:,2)),30,''filled''';
-tmp = z1;
-z1 = max(tmp,z2);
-z2 = min(tmp,z2);
+
 
 while ~isempty(varargin)
     switch upper(varargin{1})
@@ -250,7 +122,7 @@ while ~isempty(varargin)
             varargin(1) = [];
             
         case 'COLOR' %plot particles with different color, only works with track_particles
-            colorstr = ',''CData'',xyzLoc(L+M).time(:,4));colormap(jet(125)';
+            colorstr = ',''CData'',xyzLocMat(L+M).time(:,4));colormap(jet(125)';
             varargin(1) = [];
             
         case 'JITTER' %Create plot at various angles to emphasize 3D nature
@@ -267,18 +139,84 @@ while ~isempty(varargin)
     end
 end
 
+
+[filesort,numfiles] = filesortstruct([particlefilename,'*.mat']);
+if ischar(xyzfile)
+    [dirname, filename, ext] = fileparts(xyzfile);
+    movfilename = filename;
+    if ~isempty(strfind(movfilename,'Tracked'))
+        trackedpos = strfind(movfilename,'Tracked');
+        movfilename = movfilename(1:trackedpos-1);
+    end
+else
+    xyzLocMat = xyzfile;
+    try
+        movfilename = particlefilename;
+    catch
+        movfilename = 'plotxyzVID';
+    end
+end
+
+try
+    load([movfilename,'.mat'])
+    disp(['Using Constants from ',particlefilename,'.mat']);
+end
+
+
+try
+    varnam = who('-file','background.mat');
+    dirname = pwd;
+    background = load([dirname,'\background.mat'],varnam{1});
+    background=background.(varnam{1});
+    [m,n]=size(background);
+catch
+    try
+        cd ..\
+        varnam = who('-file','background.mat');
+        dirname = pwd;
+        background = load([dirname,'\background.mat'],varnam{1});
+        background=background.(varnam{1});
+        [m,n]=size(background);
+        cd(currdir);
+    catch
+        try
+            cd ..\
+            varnam = who('-file','background.mat');
+            dirname = pwd;
+            background = load([dirname,'\background.mat'],varnam{1});
+            background=background.(varnam{1});
+            [m,n]=size(background);
+            cd(currdir);
+        catch
+            m = 2048;
+            n = m;
+            cd(currdir);
+        end
+    end
+end
+
+xmax = rect_xydxdy(3)*ps/mag; % max pixels in x propagation
+ymax = rect_xydxdy(4)*ps/mag; % max pixels in y propagation
+zmax = abs(z2-z1); % max distance in z propagation
+% xscale = 1000*ps/mag; %recontructed pixel distance in mm
+% yscale = 1000*ps/mag; %recontructed pixel distance in mm
+xscale = 1000; %recontructed pixel distance in mm
+yscale = 1000; %recontructed pixel distance in mm
+zscale = 1000; %recontructed distance in mm
+% lastframe = 'numfiles';
+% lastframe = '2';
+lastframe = 'length(xyzLocMat)';
+handle = figure(fignum); set(handle, 'Position', [100 100 768 512])
+plotstr = 'figure(fignum); scatter3(xscale*xyzLocMat(L+M).time(:,1),zscale*(-z2+xyzLocMat(L+M).time(:,3)),yscale*(ymax-xyzLocMat(L+M).time(:,2)),30,''filled''';
+tmp = z1;
+z1 = max(tmp,z2);
+z2 = min(tmp,z2);
 numframes = eval(lastframe)-avgnumframes;
 
 
 if insertbackgroundflag == true;
     filename = strcat(dirname,filename);
-    filesort = dir([filename,'*.',ext]);
-    numfiles = numel(filesort);
-    for L = 1:numfiles-avgnumframes
-        [filesort(L).pathstr, filesort(L).firstname, filesort(L).ext] = ...
-            fileparts([filesort(L).name]);
-        %filesort(i).matname=strcat(filesort(i).matname,'.mat');
-    end
+    [filesortbg,numfiles] = filesortstruct([filename,'*.',ext]);
 end
 
 
@@ -290,12 +228,9 @@ if latecropflag == true
 end
 
 
-% mov(eval(lastframe)-avgnumframes).cdata = [];
-% mov(eval(lastframe)-avgnumframes).colormap = [];
-mov(eval(lastframe)-avgnumframes) = struct('cdata',zeros(rect_xydxdy(4),rect_xydxdy(3),3,'uint8'),'colormap',[]);
-
 L=1;
 M=0;
+mov(eval(lastframe)-avgnumframes) = struct('cdata',zeros(rect_xydxdy(4),rect_xydxdy(3),3,'uint8'),'colormap',[]);
 plotstr = [plotstr,colorstr,');'];
 eval(plotstr)
 for L=1:eval(lastframe)-avgnumframes
@@ -313,17 +248,17 @@ for L=1:eval(lastframe)-avgnumframes
     end
 %     figure(fignum)
 %     for M=1:avgnumframes
-%         groupz(:,M)=xyzLoc(L+M-1).time(:,3);
+%         groupz(:,M)=xyzLocMat(L+M-1).time(:,3);
 %     end
 %     meanz=mean(groupz,2);
 %     modez=mode(groupz,2);
 %     medianz=median(groupz,2);
-%     plot3(xscale*xyzLoc(L).time(:,1),zscale*(-z1+meanz),yscale*(xyzLoc(L).time(:,2)),'b.');
-%     plot3(xscale*xyzLoc(L+M).time(:,1),zscale*(-z1+xyzLoc(L+M).time(:,3)),yscale*(xyzLoc(L+M).time(:,2)),'b.');
+%     plot3(xscale*xyzLocMat(L).time(:,1),zscale*(-z1+meanz),yscale*(xyzLocMat(L).time(:,2)),'b.');
+%     plot3(xscale*xyzLocMat(L+M).time(:,1),zscale*(-z1+xyzLocMat(L+M).time(:,3)),yscale*(xyzLocMat(L+M).time(:,2)),'b.');
     %% Insert Hologram image as backdrop
     %
     if insertbackgroundflag == true;
-        Holo = sqrt(imcrop(double(imread([filesort(L).name])) ./ background,rect_xydxdy));
+        Holo = sqrt(imcrop(double(imread([filesortbg(L).name])) ./ background,rect_xydxdy));
         % title(['3D Particle Detection']);
         colormap gray
         figure(fignum); hold off;
@@ -347,7 +282,7 @@ for L=1:eval(lastframe)-avgnumframes
     %% Draw lines back to the Hologram plane.
     if drawlinesflag == true
         for N=1:10;
-            scatter3([xscale*xyzLoc(L).time(N,1),xscale*xyzLoc(L).time(N,1)],[0,zscale*(-z1+xyzLoc(L).time(N,3))],[(yscale*(ymax-xyzLoc(L).time(N,2))),(yscale*(ymax-xyzLoc(L).time(N,2)))],'b-');
+            scatter3([xscale*xyzLocMat(L).time(N,1),xscale*xyzLocMat(L).time(N,1)],[0,zscale*(-z1+xyzLocMat(L).time(N,3))],[(yscale*(ymax-xyzLocMat(L).time(N,2))),(yscale*(ymax-xyzLocMat(L).time(N,2)))],'b-');
         end
     end
     

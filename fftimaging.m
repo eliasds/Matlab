@@ -21,6 +21,7 @@ title('Histogram');
 subplot(3,5,[9:10 14:15]);
 handle3 = imagesc(Holo);
 colormap gray;axis image;axis ij;axis off;title('Raw');
+numfileslast = 0;
 numfiles = inf;
 while numfileslast ~= numfiles
     filesort = dir([filename,'*',ext]);
