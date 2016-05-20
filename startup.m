@@ -4,6 +4,10 @@ sprintf('Running GitHub Startup')
 addpath('D:\shuldman\GitHub\holography','D:\shuldman\GitHub\Matlab',...
     'D:\shuldman\GitHub\Matlab\plotting',...
     'D:\shuldman\GitHub\Matlab\Camille');
+try
+    addpath('C:\Program Files\Micro-Manager-1.4');
+catch
+end
     
 % Remove confusing path
 warning('off','all')
@@ -25,7 +29,7 @@ set(0,'DefaultFigureWindowStyle','docked')
 
 % Ignore '^' interpretation in titles
 % title(a,'Interpreter','none');
-set(0,'DefaultTextInterpreter','none');
+% set(0,'DefaultTextInterpreter','none');
 
 % for creating a cartesian coordinate system
 % set(gca,'YDir','normal');
