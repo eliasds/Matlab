@@ -1,4 +1,4 @@
-function plot_3d (x,y,z,scale,color)
+function plotsphere (x,y,z,scale,color)
 
     [X2, Y2, Z2] = sphere() ;
     col = repmat(reshape(color,1,1,3), [length(X2), length(X2), 1]) ;
