@@ -17,6 +17,7 @@ function h = scalebar(varargin)
 %     ScaleLength:  length to show (in data units) (defaults to ~10% of the 
 %                       x-axis limit range)
 %     ScaleLengthRatio: ScaleLength/range(XLim)
+%     ConversionFactor: RealLength/DataLength (defaults to 1)
 %     Location:     location of the scalebar. Possible values are
 %                       northeast (default)
 %                       northwest
@@ -50,6 +51,7 @@ function h = scalebar(varargin)
     hAxes = gca;
     scalelength = 0;
     scalelengthratio = 0.1;
+    conversionfactor = 1;
     location = 'northeast';
     colour = [0 0 0];
     boldflag = false;
@@ -95,6 +97,11 @@ function h = scalebar(varargin)
                         error 'SCALELENGTHRATIO must be a numeric value'
                     end
                     scalelengthratio = value;
+                case 'conversionfactor'
+                    if ~isnumeric(value)
+                        error 'CONVERSIONFACTOR must be a numeric value'
+                    end
+                    conversionfactor = value;
                 case 'location'
                     if ~(numel(value)==2 && isnumeric(value)) && ...
                        isempty(strmatch(lower(value),directions,'exact'))
@@ -151,8 +158,9 @@ function h = scalebar(varargin)
     if scalelength==0
         sl = range(axeslims(:,1))*scalelengthratio;
         slorder = 10^floor(log10(sl));
-        scalelength = round(sl/slorder)*slorder;    
+        scalelength = round(sl/slorder)*slorder/conversionfactor;
     else
+        scalelength = scalelength/conversionfactor;
         scalelengthratio = scalelength/range(axeslims(:,1));
     end
     
@@ -208,7 +216,7 @@ function h = scalebar(varargin)
     line(ends(:,1,1), ends(:,2,1), 'color', colour, 'linewidth', linewidth, 'parent', hg);
     line(ends(:,1,2), ends(:,2,2), 'color', colour, 'linewidth', linewidth, 'parent', hg);
     text(linepos(1,1),linepos(1,2),0,'0','verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
-    text(linepos(2,1),linepos(2,2),0,[num2str(scalelength) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    text(linepos(2,1),linepos(2,2),0,[num2str(scalelength*conversionfactor) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
     
     if nargout>0
         h = hg;
