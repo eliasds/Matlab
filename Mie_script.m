@@ -1,49 +1,54 @@
 tic % clear all; %clc;  %path([pwd,filesep,'MieFunctions'],path);
 firstfield = 1;
 keepfield = false;
+loadhist = false;
 histnum = 0;
 loadhist = true; if loadhist == true;    firstfield = 1;    histnum = Np;    d2 = d;    z_obj2 = z_obj;    x2 = x;    y2 = y;end
 
 %% System parameters (NA needs to be large enough)
-N = .25*2048; % size of hologram
+N = 0.5*2048; % size of hologram
 zpad = N+1024; %Pad hologram for FFT
 mag = 4; %Magnification
 ps = 5.5E-6; % pixel size
 Np = 10; % number of particles
 maskon = false; % Use a Coded Aperture Mask (true or false)
-masktype = 'knife';
+masktype = 'spiral';
+maskfilename = 'mask1024.mat';
 lambda = 0.6328E-6; % Wavelength in meters
 
 %% Particle parameters
+dpix = ps/mag; % relative pixel size in meters
 dmin = 10E-6; % Minimum particle diameter in meters
 dmax = 10E-6; % Maximum particle diameter in meters
-d1 = 10E-6; % Make the first particle a specific size
-zmin = -1.5E-3;%-2.5E-3; % Minimum particle z-location in meters
+d1 = 10E-6; % % Designate diameter of the first particle
+zmin = -1.5E-3; % Minimum particle z-location in meters
 zmax = 1.5E-3; % Maximum particle z-location in meters
-z_obj1 = 0.2E-3; % Put the first particle in a specific z-position
-zres = 0.1E-3; % z-resolution in meters: rounds random z-positions to zres resolution steps for simplicity.
-x1 = 0; % Put the first particle in a specific x-position
-y1 = 0; % Put the first particle in a specific x-position
+z_obj1 = 0.2E-3; % Designate first particle's axial z-position (in meters)
+zres = 0.1E-3; % z-resolution in meters: rounds random z-positions to zres resolution steps for simplicity
+x1 = 0/dpix; % Designate first particle's lateral x-position (in pixels, centered at (0,0))
+y1 = 0/dpix; % Designate first particle's lateral y-position (in pixels, centered at (0,0))
 
-%% Properties of the medium
+%% Properties of the medium - Refractive index
 n1 = 1.33;   % index of refraction of water
-% index of the particle
-%n2 = 0.13455+1i*3.9865; %indezx of refraction of silver @ 633nm
-n2 = 1.5821; % index of refraction of polystyrene
-n3 = 1.46; %index of refraction of cellulose
-% crude oil
-% n2 = 1.5+1i*100; % index of refraction of the sphere/air bubble/particle
-
+% n2 = 0.13455+1i*3.9865; %indez of refraction of silver @ 633nm
+% n2 = 1.5+1i*100; % index of refraction of crude oil
+n2 = 1.5821; % index of refraction of polystyrene (particles)
+n3 = 1.46; %index of refraction of cellulose (first particle)
 
 %% Filename to save to
-fn = ['Mie',num2str(N),'px_',num2str(Np),'part_',num2str(round(n1*100)),'n1_',num2str(round(n2*100)),'n2'];
+fn = ['Mie',num2str(N),'px_',num2str(Np),'part_'];
 if maskon == true
-    fn = ['Mie',num2str(N),'px_',num2str(Np),'part_masked_',num2str(round(n1*100)),'n1_',num2str(round(n2*100)),'n2'];
+    fn = [fn,masktype,'masked_'];
+end
+fn = [fn,num2str(round(n1*100)),'n1'];
+if round(zmin*1E3) == zmin*1E3 && round(zmax*1E3) == zmax*1E3
+    fn = [fn,'_z',num2str(round(zmin*1E3)),'to',num2str(round(zmax*1E3)),'mm'];
+else
+    fn = [fn,'_z',num2str(round(zmin*1E6)),'to',num2str(round(zmax*1E6)),'um'];
 end
 
 %% Use above parameters to create particles
 %
-dpix = ps/mag; % relative pixel size in meters
 k = 2*pi/(lambda/n1); % wave number
 % Make random particle sizes between dmin and dmax in meters
 d = (rand([1,Np])*(dmax-dmin)+dmin);
@@ -79,16 +84,7 @@ else
 end
 
     
-%% Check for Nyquist Sampling
-% absz = abs(z_obj);
-% absz(absz==0) = inf;
-% abszmin = min(absz);
-% min_integer = ceil(k*abszmin/pi);
-% all_integers = (min_integer:min_integer+9999);
-% all_ring_pos = [0,sqrt((all_integers*pi/k).^2 - abszmin^2)];
-% all_delta_rings = diff(all_ring_pos);
-% max_rings = sum(all_delta_rings/2 > dpix);
-% disp(['Minimum Number of Nyquist Limited Diffraction Rings: ',num2str(max_rings)]);
+%% Check for fundamental Nyquist Sampling Limit
 [fx,fy] = meshgrid((-N/2:N/2-1)*(1/N/dpix));
 NAbyLambda = (fx.^2+fy.^2<(n1/lambda)^2);
 
@@ -96,8 +92,13 @@ NAbyLambda = (fx.^2+fy.^2<(n1/lambda)^2);
 mask = 1;
 maskpadded = 1;
 if maskon == true
-    mask = makemask(N, masktype);
-    maskpadded = makemask(zpad, masktype);
+    if isequal(masktype,'spiral') || isequal(masktype,'file') || isequal(masktype,'var')
+            mask = makemask(N, masktype, maskfilename);
+            maskpadded = makemask(zpad, masktype, maskfilename);
+    else
+        mask = makemask(N, masktype);
+        maskpadded = makemask(zpad, masktype);
+    end
 %     mask = ones(N,N);
 %     mask(1:end,1:N/2-1) = 0;
 % %     mask(1:N/2-1,1:N/2-1) = 0;
@@ -129,24 +130,17 @@ for p = firstfield:Np
         Ex = Ex.*exp(-1i*k*abs(z_obj(p)));
         Ex2 = ifft2(ifftshift(fftshift(fft2(Ex)).*NAbyLambda));
     end
-    if isequal(Ex,Ex2) ~= true;
-        disp(['Applying 2/Lambda Cutoff Frequency for Particle ',num2str(p)])
-    end
-    if z_obj(p) < 0
-        Ex3 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'tfc','cpu');
-        if maskon==true
-            Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'tfc','mask',maskpadded,'cpu');
-        else
-            Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'tfc','cpu');
-        end
+    if     z_obj(p) <  0
+        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'cpu');
+        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'mask',maskpadded,'cpu');
     elseif z_obj(p) == 0 && maskon == true
-        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'tfc','mask',maskpadded,'cpu');
-    elseif z_obj(p) > 0 && maskon == true
-        Ex2 = propagate(Ex2,lambda/n1,-z_obj(p),ps/mag,'zpad',zpad,'tfc','cpu');
-        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'tfc','mask',maskpadded,'cpu');
+        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'mask',maskpadded,'cpu');
+    elseif z_obj(p) >  0 && maskon == true
+        Ex2 = propagate(Ex2,lambda/n1,-z_obj(p),ps/mag,'zpad',zpad,'cpu');
+        Ex2 = propagate(Ex2,lambda/n1,z_obj(p),ps/mag,'zpad',zpad,'mask',maskpadded,'cpu');
     end
     Field = Field + Ex2; % record total field for comparison.
-%     Ex_all(:,:,p) = Ex;
+%     Ex_all(:,:,p) = Ex2;
     multiWaitbar(['Creating E-Fields for ', num2str(1 + Np - firstfield),' Particles'],(1 + p - firstfield)/(1 + Np - firstfield));
 end
 multiWaitbar('closeall');
