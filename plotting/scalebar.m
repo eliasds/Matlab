@@ -17,7 +17,7 @@ function h = scalebar(varargin)
 %     ScaleLength:  length to show (in data units) (defaults to ~10% of the 
 %                       x-axis limit range)
 %     ScaleLengthRatio: ScaleLength/range(XLim)
-%     ConversionFactor: RealLength/DataLength (defaults to 1)
+%     CustomScale:  Create a custom scale length using Unit string(false)
 %     Location:     location of the scalebar. Possible values are
 %                       northeast (default)
 %                       northwest
@@ -28,6 +28,7 @@ function h = scalebar(varargin)
 %     Bold:         draw with bold text and linewidth=2. 
 %                       True or false(default)
 %     Unit:         string containing units e.g. 'mm'
+%     UnitSize:    Scale figure's units to this size when determining Scalelength
 %
 % Note: SCALEBAR sets the XLimMode and YLimMode of the axes to manual.
 %
@@ -35,6 +36,11 @@ function h = scalebar(varargin)
 % Modified 24 March 2013 by Amanda Ng
 %  - fixed bug: bold wasn't refreshing after zoom
 %  - added unit string
+% Modified 6 December 2015 by Daniel Shuldman
+%  - fixed bug: removed initial '0' value at begininning of scalebar nad
+%               centered scalelength under scalebar
+%  - Added feature: Remove scalelength from displaying and let the string
+%                   'unit,' also include a custom scale length.
 
     % DELETE SCALEBAR IF ONE EXISTS
     delete(findobj(gca,'tag','scalebar'));
@@ -51,13 +57,14 @@ function h = scalebar(varargin)
     hAxes = gca;
     scalelength = 0;
     scalelengthratio = 0.1;
-    conversionfactor = 1;
     location = 'northeast';
     colour = [0 0 0];
     boldflag = false;
     linewidth = 0.5;
     fontweight = 'normal';
     unitstring = '';
+    unitsize = 1;
+    customscaleflag = false;
 
     % PROCESS ARGUMENTS
     if nargin>0
@@ -97,18 +104,13 @@ function h = scalebar(varargin)
                         error 'SCALELENGTHRATIO must be a numeric value'
                     end
                     scalelengthratio = value;
-                case 'conversionfactor'
-                    if ~isnumeric(value)
-                        error 'CONVERSIONFACTOR must be a numeric value'
-                    end
-                    conversionfactor = value;
                 case 'location'
                     if ~(numel(value)==2 && isnumeric(value)) && ...
                        isempty(strmatch(lower(value),directions,'exact'))
                         error 'unrecognised value for LOCATION'
                     end
                     location = value;
-                case 'colour'
+                case {'colour', 'color'}
                     if numel(value)~=3 || ~isnumeric(value)
                         error 'COLOUR must be a 1x3 representation of an RGB colour'
                     end
@@ -125,6 +127,16 @@ function h = scalebar(varargin)
                         error('''Unit'' must be followed by a string')
                     end
                     unitstring = [' ' strtrim(value)];
+                case 'unitsize'
+                    if ~isnumeric(value)
+                        error 'UNITSIZE must be a numeric value'
+                    end
+                    unitsize = value;
+                case 'customscale'
+                    if ischar(value) && strcmpi(value,'true') || ...
+                       (islogical(value) || isnumeric(value)) && value
+                            customscaleflag = true;
+                    end
                 otherwise
                     error(['unrecognised parameter: ' parameter]);
             end
@@ -155,12 +167,12 @@ function h = scalebar(varargin)
     end
 
     % CALCULATE SCALELENGTH
+    scalelength = scalelength/unitsize;
     if scalelength==0
-        sl = range(axeslims(:,1))*scalelengthratio;
+        sl = range(axeslims(:,1))*unitsize*scalelengthratio;
         slorder = 10^floor(log10(sl));
-        scalelength = round(sl/slorder)*slorder/conversionfactor;
+        scalelength = round(sl/slorder)*slorder/unitsize;    
     else
-        scalelength = scalelength/conversionfactor;
         scalelengthratio = scalelength/range(axeslims(:,1));
     end
     
@@ -215,8 +227,13 @@ function h = scalebar(varargin)
     line(linepos(:,1), linepos(:,2), 'color', colour, 'linewidth', linewidth, 'parent', hg);
     line(ends(:,1,1), ends(:,2,1), 'color', colour, 'linewidth', linewidth, 'parent', hg);
     line(ends(:,1,2), ends(:,2,2), 'color', colour, 'linewidth', linewidth, 'parent', hg);
-    text(linepos(1,1),linepos(1,2),0,'0','verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
-    text(linepos(2,1),linepos(2,2),0,[num2str(scalelength*conversionfactor) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+%     text(linepos(1,1),linepos(1,2),0,'0','verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+%     text(linepos(2,1),linepos(2,2),0,[num2str(scalelength) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    if customscaleflag == true
+        text(round(linepos(1,1)+linepos(2,1))/2,linepos(1,2),0,unitstring,'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    else
+        text(round(linepos(1,1)+linepos(2,1))/2,linepos(1,2),0,[num2str(scalelength*unitsize) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', colour, 'fontweight', fontweight, 'parent', hg);
+    end
     
     if nargout>0
         h = hg;
@@ -233,7 +250,9 @@ function h = scalebar(varargin)
              'AnchorRatio',[(anchor(1)-min(axeslims(:,1)))/range(axeslims(:,1)) (anchor(2)-min(axeslims(:,2)))/range(axeslims(:,2))];...
              'Colour',colour;...
              'Listeners',hL;...
-             'Bold',boldflag};
+             'Bold',boldflag;...
+             'UnitSize',unitsize;...
+             'CustomScale',customscaleflag};
     set(hg,'UserData',udata);    
     
     % CALLBACK FUNCTIONS
@@ -254,8 +273,10 @@ function h = scalebar(varargin)
         location = [anchorratio(1)*range(axeslims(:,1))+axeslims(1,1) anchorratio(2)*range(axeslims(:,2))+axeslims(1,2)];
         colour = udata{strcmpi(udata(:,1),'Colour'),2};
         boldflag = udata{strcmpi(udata(:,1),'Bold'),2};
+        unitsize = udata{strcmpi(udata(:,1),'UnitSize'),2};
+        customscaleflag = udata{strcmpi(udata(:,1),'CustomScale'),2};
         
-        scalebar(hAxes,'ScaleLengthRatio',scalelengthratio,'Location',location,'Colour',colour, 'Bold', boldflag);
+        scalebar(hAxes,'CustomScale',customscaleflag,'UnitSize',unitsize,'ScaleLengthRatio',scalelengthratio,'Location',location,'Colour',colour, 'Bold', boldflag);
 
         
             
