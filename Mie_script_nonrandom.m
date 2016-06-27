@@ -18,12 +18,12 @@ lambda = 0.6328E-6; % Wavelength in meters
 %% Particle parameters
 dpix = ps/mag; % relative pixel size in meters
 % Designate diameter of all particle sizes
-d = [repmat(10e-6,[1,6])];
+d = [100e-6, repmat(10e-6,[1,6])];
 % Designate axial (z) particle locations (in meters)
-z_obj =   [7e-3,   5e-3,   4e-3,   3e-3,   5e-3,   6e-3]-0e-3;
+z_obj =   [5e-3,   7e-3,   5e-3,   4e-3,   3e-3,   5e-3,   6e-3]-0e-3;
 % Designate lateral (x,y) particle locations (in pixels, centered at (0,0))
-x = round([-100e-6, 0,      75e-6, -200e-6, 0,      150e-6]/dpix);
-y = round([100e-6, 100e-6, 75e-6,  200e-6, 200e-6, 150e-6]/dpix);
+x = round([0,     -100e-6, 0,      75e-6, -200e-6, 0,      150e-6]/dpix);
+y = round([0,      100e-6, 100e-6, 75e-6,  200e-6, 200e-6, 150e-6]/dpix);
 
 %% Properties of the medium - Refractive index
 n1 = 1.33;   % index of refraction of water
@@ -40,7 +40,7 @@ zmax = max(z_obj);
 if numel(z_obj) == numel(x) && numel(z_obj) == numel(y) && numel(z_obj) == numel(d)
     Np = numel(z_obj); % number of particles
 else
-    error('Number of designated particles in x, y, and z do not match')
+    error('Number of designated particles in x, y, z, and "d", do not match')
 end
 
 % Use data from a previous dataset
