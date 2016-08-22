@@ -36,7 +36,7 @@ colorstr = ',''b'''; % Default setting - does not seperate particles with colors
 plotvortflag = false; %Set to true if you want to plot approx location of vorticella
 insertbackgroundflag = false;
 drawlinesflag = false;
-latecropflag = false;
+latecropplotflag = false;
 framerate = 40;
 avgnumframes = 0;
 jitterflag = false;
@@ -218,7 +218,7 @@ while ~isempty(varargin)
             varargin(1:2) = [];
             
         case 'LATECROP'
-            latecropflag = true;
+            latecropplotflag = true;
             if numel(varargin{2}) ~= 4
                 rect_xydxdy_copy = [(varargin{2}(1:2)), 1023,1023];
             else
@@ -283,7 +283,7 @@ end
 
 
 % Change Default Crop Parameters
-if latecropflag == true
+if latecropplotflag == true
     rect_xydxdy = rect_xydxdy_copy;
     xmax = rect_xydxdy(3); % max pixels in x propagation
     ymax = rect_xydxdy(4); % max pixels in y propagation
@@ -384,7 +384,7 @@ if vidonflag==true
             writerObj = VideoWriter([xyzfile(1:end-4),'_3DParticleDetectionVideo_rand',num2str(uint8(rand*100))],'MPEG-4');
         end
     else
-        writerObj = VideoWriter([movfilename,'_3DParticleDetectionVideo_rand',num2str(uint8(rand*100))],'MPEG-4');
+        writerObj = VideoWriter([movfilename,'_3DParticleDetectionVideoAZ',num2str(az),'EL',num2str(el),'_rand',num2str(uint8(rand*100))],'MPEG-4');
     end
     writerObj.FrameRate = framerate;
     open(writerObj);
