@@ -1,0 +1,110 @@
+3-point gaussian sub-pixel estimator used in piv.m: copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon
+
+Technion – Israel Institute of Technology, All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of the Technion nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------------------------------
+
+
+inpaint_nans by John D'Errico
+29 Feb 2004 (Updated 28 Jun 2006) 
+
+Copyright (c) 2009, John D'Errico
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are 
+met:
+
+    * Redistributions of source code must retain the above copyright 
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright 
+      notice, this list of conditions and the following disclaimer in 
+      the documentation and/or other materials provided with the distribution
+      
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------------------------------
+
+uipickfiles: uigetfile on steroids by Douglas Schwarz
+25 Apr 2006 (Updated 24 Mar 2010) 
+
+Copyright (c) 2007, Douglas M. Schwarz
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are 
+met:
+
+    * Redistributions of source code must retain the above copyright 
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright 
+      notice, this list of conditions and the following disclaimer in 
+      the documentation and/or other materials provided with the distribution
+      
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------------------------------
+
+smoothn: SMOOTHN Robust spline smoothing for 1-D to N-D data.
+Damien Garcia -- 2009/03, revised 2010/06
+Garcia D: A fast all-in-one method for automated post-processing of PIV data.
+Exp Fluids, 2010
+
+Garcia D: Robust smoothing of gridded data in one and higher dimensions with missing values.
+Comput Statist Data Anal, 2010;54:1167-1178
+
+---------------------------------------------------------------------------------
+
+dctn: N-dimensional Discrete Cosine Transform
+Damien Garcia, http://www.biomecardio.com
+
+---------------------------------------------------------------------------------
+
+idctn: N-dimensional inverse Discrete Cosine Transform
+Damien Garcia, http://www.biomecardio.com
+
+---------------------------------------------------------------------------------
+
+Ellipse: by D.G. Long
+
+---------------------------------------------------------------------------------
+
+Particle image generation based on Raffel M, Willert CE, Kompenhans J (1998) Particle image velocity:
+a practical guide. Springer, Berlin Heidelberg New York, Hong Kong
+
+---------------------------------------------------------------------------------
+
+NaN Suite by Jan Gläscher, 31 Jan 2005 (Updated 05 May 2008)
+Descriptive Statistics for N-D matrices ignoring NaNs.
+
+-------
+Exportfig by Ben Hinkle, 13 Sep 2001 (Updated 28 Oct 2009)
+Functions for exporting figures.
