@@ -1,13 +1,27 @@
 sprintf('Running GitHub Startup')
 
-% Add to Path
-addpath('D:\shuldman\GitHub\holography','D:\shuldman\GitHub\Matlab',...
-    'D:\shuldman\GitHub\Matlab\plotting',...
-    'D:\shuldman\GitHub\Matlab\Camille');
+try
+cd d:
+end
+
+
+% Add Github to Path
+try
+    addpath('D:\shuldman\GitHub\holography',...
+        'D:\shuldman\GitHub\Matlab',...
+        'D:\shuldman\GitHub\Matlab\plotting',...
+        'D:\shuldman\GitHub\Matlab\Camille');
+catch
+    disp('github path has moved');
+end
+
+% Add micromanager to Path
 try
     addpath('C:\Program Files\Micro-Manager-1.4');
 catch
+    disp('micromanager is unavailable');
 end
+
     
 % Remove confusing path
 warning('off','all')
