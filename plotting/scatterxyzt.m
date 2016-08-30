@@ -319,7 +319,7 @@ if vidonflag==true
             writerObj = VideoWriter([xyzfile(1:end-4),'_3DParticleDetectionVideo_rand',num2str(uint8(rand*100))],'MPEG-4');
         end
     else
-        writerObj = VideoWriter([movfilename,'_3DParticleDetectionVideo_rand',num2str(uint8(rand*100))],'MPEG-4');
+        writerObj = VideoWriter([movfilename,'_3DParticleDetectionVideoAZ',num2str(az),'EL',num2str(el),'_rand',num2str(uint8(rand*100))],'MPEG-4');
     end
     writerObj.FrameRate = framerate;
     open(writerObj);
