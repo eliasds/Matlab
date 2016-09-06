@@ -6,11 +6,11 @@ histnum = 0;
 loadhist = true; if loadhist == true;    firstfield = 1;    histnum = Np;    d2 = d;    z_obj2 = z_obj;    x2 = x;    y2 = y;end
 
 %% System parameters (NA needs to be large enough)
-N = 0.5*2048; % size of hologram
+N = 2048; % size of hologram
 zpad = N+1024; %Pad hologram for FFT
 mag = 4; %Magnification
 ps = 5.5E-6; % pixel size
-Np = 10; % number of particles
+Np = 7; % number of particles
 maskon = false; % Use a Coded Aperture Mask (true or false)
 masktype = 'spiral';
 maskfilename = 'mask1024.mat';
@@ -29,11 +29,14 @@ x1 = 0/dpix; % Designate first particle's lateral x-position (in pixels, centere
 y1 = 0/dpix; % Designate first particle's lateral y-position (in pixels, centered at (0,0))
 
 %% Properties of the medium - Refractive index
-n1 = 1.33;   % index of refraction of water
-% n2 = 0.13455+1i*3.9865; %indez of refraction of silver @ 633nm
-% n2 = 1.5+1i*100; % index of refraction of crude oil
-n2 = 1.5821; % index of refraction of polystyrene (particles)
-n3 = 1.46; %index of refraction of cellulose (first particle)
+% 1.33;              % index of refraction of water
+% 0.13455+1i*3.9865; % index of refraction of silver @ 633nm
+% 1.5+1i*100;        % index of refraction of crude oil
+% 1.46;              % index of refraction of cellulose
+n1 = 1.33;   % index of refraction of surrounding medium
+n2 = 1.5821; % index of refraction of particles
+n3 = 1.46;   % index of refraction offirst particle (default: n3 = n2)
+
 
 %% Filename to save to
 fn = ['Mie',num2str(N),'px_',num2str(Np),'part_'];
